@@ -54,8 +54,8 @@
     },
     {
       "path": "roles/narrative-writer.md",
-      "sha256": "fd01b7aa4618cbb445d5e256c8303ea9d012a1a54d762503d17c78a7ad2c9374",
-      "bytes": 15641
+      "sha256": "88c058ba1b82aa635d040ff3087d575852a7775e070cf6ad12d32bf013e78bd1",
+      "bytes": 15396
     },
     {
       "path": "roles/story-architect.md",
@@ -439,8 +439,8 @@
     },
     {
       "path": "skills/story-long-write/SKILL.md",
-      "sha256": "90992c1a0173a534e72e98ce02a9c73d95eb7f38d63249c93c07dd3e148f6a14",
-      "bytes": 14608
+      "sha256": "f277371091fe9cedf6c4c9df835cdcbf4378e296d2dcc81b6232f5fde2045b3f",
+      "bytes": 14618
     },
     {
       "path": "skills/story-long-write/references/agent-calls.md",
@@ -799,8 +799,8 @@
     },
     {
       "path": "skills/story-long-write/references/scene-grammar.md",
-      "sha256": "b4a809c62b7c3961d184133f26708e3718fa8d5a0754420d5d4cbb747f4eab81",
-      "bytes": 5604
+      "sha256": "0aac1bb243735d9d95936e5ed21caa2445d61956622fe1b915fbb1ac2d300bbf",
+      "bytes": 3125
     },
     {
       "path": "skills/story-long-write/references/stop-and-fix.md",
@@ -839,8 +839,8 @@
     },
     {
       "path": "skills/story-long-write/references/workflow-chapter.md",
-      "sha256": "8e25e467276c7027102d00969caaaf97d8ea48428d298fd6d07896b0c12d869e",
-      "bytes": 15483
+      "sha256": "47e7524e5bed809960a46b140a69c3e4fb17266125d3eb16375adfb3565a43e1",
+      "bytes": 15287
     },
     {
       "path": "skills/story-long-write/references/workflow-daily.md",
@@ -849,8 +849,8 @@
     },
     {
       "path": "skills/story-long-write/references/workflow-outline.md",
-      "sha256": "a0891bd6eb0f195cd8ca7294a0f851e5c7089837a74b1d0973766dbdb967bf9c",
-      "bytes": 21842
+      "sha256": "b2a8925e570812d07387471d4107fe91d37667a3e564cc6fc36ce64ff5bd382f",
+      "bytes": 22952
     },
     {
       "path": "skills/story-long-write/references/workflow-revision.md",
@@ -911,6 +911,11 @@
       "path": "skills/story-long-write/scripts/check-outline-copy.js",
       "sha256": "0ab8bc11ea624238920fbb3cd36b466f9c6548632f5bead64186bc4f4f5ac595",
       "bytes": 13356
+    },
+    {
+      "path": "skills/story-long-write/scripts/check-scene-grammar.cjs",
+      "sha256": "87cea8bc2ec79d518cf52eda6f8de4dff7ae5d20e728d2572d0252011cbd3092",
+      "bytes": 16400
     },
     {
       "path": "skills/story-long-write/scripts/normalize-punctuation.js",
@@ -1378,11 +1383,6 @@
       "bytes": 20291
     },
     {
-      "path": "skills/story-setup/references/agent-references/scene-grammar.md",
-      "sha256": "b4a809c62b7c3961d184133f26708e3718fa8d5a0754420d5d4cbb747f4eab81",
-      "bytes": 5604
-    },
-    {
       "path": "skills/story-setup/references/agent-references/short-chapter-hooks.md",
       "sha256": "8f931ef9ff06f1958da40d683c9d3788ffda8d1136964a2305c5ce23316c3679",
       "bytes": 8632
@@ -1434,8 +1434,8 @@
     },
     {
       "path": "skills/story-setup/references/agent-references/writing-craft.md",
-      "sha256": "f94ee9e9ca392e36cf0adc54adf1812d6f278b6c94bd35513330718992e373cc",
-      "bytes": 34484
+      "sha256": "cc3c4f572a45f4723e142a98fe7b524abb47f0b6836da2e2eed7f43bfacf73a2",
+      "bytes": 32111
     },
     {
       "path": "skills/story-setup/references/diagnostics.md",

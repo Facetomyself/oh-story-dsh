@@ -6,4 +6,4 @@
 
 没有上游检出时，直接跑 `pnpm assets:craft`。它只铺覆盖层并刷新哈希，不重新下载技能。
 
-教材原文不进这个仓库。操作句在 `scene-grammar.md`。
+教材原文不进这个仓库。计数表在 `scene-grammar.md`，检查器是 `check-scene-grammar.cjs`。铺进知识库时，第 11 节由这份计数表生成，不再另存一份说明。
