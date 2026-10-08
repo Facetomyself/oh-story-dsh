@@ -54,8 +54,8 @@
     },
     {
       "path": "roles/narrative-writer.md",
-      "sha256": "88c058ba1b82aa635d040ff3087d575852a7775e070cf6ad12d32bf013e78bd1",
-      "bytes": 15396
+      "sha256": "4695b790e9484bc0f102fbda1ba6e2725997201551cd01b8490747971c4fa50c",
+      "bytes": 15468
     },
     {
       "path": "roles/story-architect.md",
@@ -439,8 +439,8 @@
     },
     {
       "path": "skills/story-long-write/SKILL.md",
-      "sha256": "f277371091fe9cedf6c4c9df835cdcbf4378e296d2dcc81b6232f5fde2045b3f",
-      "bytes": 14618
+      "sha256": "317371edd99e80b492a43e932d6e7deaa478d8eba400aac9996739b5c6ca242c",
+      "bytes": 14681
     },
     {
       "path": "skills/story-long-write/references/agent-calls.md",
@@ -788,6 +788,11 @@
       "bytes": 11880
     },
     {
+      "path": "skills/story-long-write/references/prose-surface.md",
+      "sha256": "3b6f50e666ed99fd7827a9f20d4ebe5bacd76acf1ff82bcf89fd19e694e735e0",
+      "bytes": 2076
+    },
+    {
       "path": "skills/story-long-write/references/reader-contract-and-progression.md",
       "sha256": "c1b9e6cf5cf9e6234f92f856fd9f7d0db1add9d68542a889b8e96937ea3723db",
       "bytes": 11534
@@ -839,8 +844,8 @@
     },
     {
       "path": "skills/story-long-write/references/workflow-chapter.md",
-      "sha256": "47e7524e5bed809960a46b140a69c3e4fb17266125d3eb16375adfb3565a43e1",
-      "bytes": 15287
+      "sha256": "a5e07e730493aa101c7cdb52431034872935df21ef1dafaef3ddbddd13851553",
+      "bytes": 15684
     },
     {
       "path": "skills/story-long-write/references/workflow-daily.md",
@@ -911,6 +916,11 @@
       "path": "skills/story-long-write/scripts/check-outline-copy.js",
       "sha256": "0ab8bc11ea624238920fbb3cd36b466f9c6548632f5bead64186bc4f4f5ac595",
       "bytes": 13356
+    },
+    {
+      "path": "skills/story-long-write/scripts/check-prose-surface.cjs",
+      "sha256": "0277a8d0778804d4916555d281a5b0bcbfd51c02f3609a63de8f2233ce546b38",
+      "bytes": 6984
     },
     {
       "path": "skills/story-long-write/scripts/check-scene-grammar.cjs",
@@ -1434,8 +1444,8 @@
     },
     {
       "path": "skills/story-setup/references/agent-references/writing-craft.md",
-      "sha256": "cc3c4f572a45f4723e142a98fe7b524abb47f0b6836da2e2eed7f43bfacf73a2",
-      "bytes": 32111
+      "sha256": "dfccaf0818f0773414dcf69ea83c9d217ccd1a7287327652db3a84cbadaaa0a7",
+      "bytes": 34389
     },
     {
       "path": "skills/story-setup/references/diagnostics.md",

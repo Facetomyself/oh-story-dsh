@@ -7,7 +7,9 @@ const overlayRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../overlay
 
 const copies = [
   ["scene-grammar.md", "skills/story-long-write/references/scene-grammar.md"],
-  ["check-scene-grammar.cjs", "skills/story-long-write/scripts/check-scene-grammar.cjs"]
+  ["check-scene-grammar.cjs", "skills/story-long-write/scripts/check-scene-grammar.cjs"],
+  ["prose-surface.md", "skills/story-long-write/references/prose-surface.md"],
+  ["check-prose-surface.cjs", "skills/story-long-write/scripts/check-prose-surface.cjs"]
 ] as const;
 
 const removedAfterSync = [
@@ -23,16 +25,18 @@ interface Replacement {
 const replacements: readonly Replacement[] = [
   {
     path: "skills/story-long-write/SKILL.md",
-    to: "2. 主会话直接写正文时，首次落笔前完整读取 `references/long-format.md` 与 `references/writing-craft.md`（和写手同一套技法；第 11 节是场面计数，不另读 scene-grammar.md）；",
+    to: "2. 主会话直接写正文时，首次落笔前完整读取 `references/long-format.md` 与 `references/writing-craft.md`（和写手同一套技法；第 11 节是场面计数，不另读 scene-grammar.md；第 12 节是句子表面计数，不另读 prose-surface.md）；",
     from: [
+      "2. 主会话直接写正文时，首次落笔前完整读取 `references/long-format.md` 与 `references/writing-craft.md`（和写手同一套技法；第 11 节是场面计数，不另读 scene-grammar.md）；",
       "2. 主会话直接写正文时，首次落笔前完整读取 `references/long-format.md`、`references/writing-craft.md` 与 `references/scene-grammar.md`（场面语法；和写手同一套技法）；",
       "2. 主会话直接写正文时，首次落笔前完整读取 `references/long-format.md` 与 `references/writing-craft.md`（和写手同一套技法）；"
     ]
   },
   {
     path: "roles/narrative-writer.md",
-    to: "| `story-setup/references/agent-references/writing-craft.md` | **产出正文全程**（从细纲到正文、场景推进、疏密分配、物件三次出现、套式反应删除测试；第 11 节场面计数必须执行，不另读 scene-grammar.md） |",
+    to: "| `story-setup/references/agent-references/writing-craft.md` | **产出正文全程**（从细纲到正文、场景推进、疏密分配、物件三次出现、套式反应删除测试；第 11 节场面计数必须执行，不另读 scene-grammar.md；第 12 节句子表面计数必须执行，不另读 prose-surface.md） |",
     from: [
+      "| `story-setup/references/agent-references/writing-craft.md` | **产出正文全程**（从细纲到正文、场景推进、疏密分配、物件三次出现、套式反应删除测试；第 11 节场面计数必须执行，不另读 scene-grammar.md） |",
       [
         "| `story-setup/references/agent-references/writing-craft.md` | **产出正文全程**（从细纲到正文、场景推进、疏密分配、物件三次出现、套式反应删除测试；第 11 节场面语法必须执行） |",
         "| `story-setup/references/agent-references/scene-grammar.md` | **产出正文全程**。与 writing-craft.md 第 11 节是同一份规则。若 oh_story_bundled_reference 的可选列表里还没有该路径，以第 11 节为准，视为已读，继续写，不要停笔 |"
@@ -50,8 +54,9 @@ const replacements: readonly Replacement[] = [
   },
   {
     path: "skills/story-long-write/references/workflow-chapter.md",
-    to: "9. **检查钩子、爽点与契约**：章尾有往下看的理由（低压/过场章留阶段目标即可）；高压/推进章爽点到位；对着成稿过契约四问——主角是否靠自己的选择挣到本章结果？收益是否被配角、机构或巧合无交换地拿走？有没有提前动用后面的底牌？旧期待付利息、留新期待了吗？任一问不过就按问改：没挣到→让结果落在他的选择或判断上；收益被拿走→补交换或让他拿回控制点；提前用了底牌→换成本卷已解锁的手段；没付利息→给旧期待一个小兑现再留新钩。然后跑 `node scripts/check-scene-grammar.cjs --json --prose {本章正文路径}`：exit 1 只改 `repair_scope` 点名的集体反应句和章尾感悟，改成某个在场者的动作或台词；不新增情节，也不为了凑阻碍数另写一次拦阻。细纲里的阻碍数是几，正文就写表里那几次。低压且阻碍数为 0 时不补阻碍。不达标只修批准内容，修后重跑步骤 8；需补强、契约破坏都在本章汇报里告诉作者。",
+    to: "9. **检查钩子、爽点与契约**：章尾有往下看的理由（低压/过场章留阶段目标即可）；高压/推进章爽点到位；对着成稿过契约四问——主角是否靠自己的选择挣到本章结果？收益是否被配角、机构或巧合无交换地拿走？有没有提前动用后面的底牌？旧期待付利息、留新期待了吗？任一问不过就按问改：没挣到→让结果落在他的选择或判断上；收益被拿走→补交换或让他拿回控制点；提前用了底牌→换成本卷已解锁的手段；没付利息→给旧期待一个小兑现再留新钩。然后跑 `node scripts/check-scene-grammar.cjs --json --prose {本章正文路径}`：exit 1 只改 `repair_scope` 点名的集体反应句和章尾感悟，改成某个在场者的动作或台词；不新增情节，也不为了凑阻碍数另写一次拦阻。细纲里的阻碍数是几，正文就写表里那几次。低压且阻碍数为 0 时不补阻碍。再跑 `node scripts/check-prose-surface.cjs --json --prose {本章正文路径}`：exit 1 只改 `repair_scope` 点名的套语、引号外的「你」和不足 11 个汉字的动作段。套语换成这句里已有的动作或物件，不换成另一个套语。引号内的「你」和「我」不动。文风写明第二人称时给检查器加 `--allow-ni`。不新增情节，最多两轮。不达标只修批准内容，修后重跑步骤 8；需补强、契约破坏都在本章汇报里告诉作者。",
     from: [
+      "9. **检查钩子、爽点与契约**：章尾有往下看的理由（低压/过场章留阶段目标即可）；高压/推进章爽点到位；对着成稿过契约四问——主角是否靠自己的选择挣到本章结果？收益是否被配角、机构或巧合无交换地拿走？有没有提前动用后面的底牌？旧期待付利息、留新期待了吗？任一问不过就按问改：没挣到→让结果落在他的选择或判断上；收益被拿走→补交换或让他拿回控制点；提前用了底牌→换成本卷已解锁的手段；没付利息→给旧期待一个小兑现再留新钩。然后跑 `node scripts/check-scene-grammar.cjs --json --prose {本章正文路径}`：exit 1 只改 `repair_scope` 点名的集体反应句和章尾感悟，改成某个在场者的动作或台词；不新增情节，也不为了凑阻碍数另写一次拦阻。细纲里的阻碍数是几，正文就写表里那几次。低压且阻碍数为 0 时不补阻碍。不达标只修批准内容，修后重跑步骤 8；需补强、契约破坏都在本章汇报里告诉作者。",
       "9. **检查钩子、爽点与契约**：章尾有往下看的理由（低压/过场章留阶段目标即可）；高压/推进章爽点到位；对着成稿过契约四问——主角是否靠自己的选择挣到本章结果？收益是否被配角、机构或巧合无交换地拿走？有没有提前动用后面的底牌？旧期待付利息、留新期待了吗？再过场面四问：危机有没有落到具体的那一层需求上，而不只是被命名；行动里有没有阻碍或转折；展示有没有打在某个在场者的旧认知上；章尾有没有新坑。任一问不过就按问改：没挣到→让结果落在他的选择或判断上；收益被拿走→补交换或让他拿回控制点；提前用了底牌→换成本卷已解锁的手段；没付利息→给旧期待一个小兑现再留新钩；危机只是标签→写成那一层需求被伤到的事实；没有阻碍→在得手前补上已批准范围内的阻力；没有旧认知→补这个在场者事先的一句判断；没有新坑→停在下一个麻烦上，不另起感悟。不达标只修批准内容，修后重跑步骤 8；需补强、契约破坏都在本章汇报里告诉作者。",
       "9. **检查钩子、爽点与契约**：章尾有往下看的理由（低压/过场章留阶段目标即可）；高压/推进章爽点到位；对着成稿过契约四问——主角是否靠自己的选择挣到本章结果？收益是否被配角、机构或巧合无交换地拿走？有没有提前动用后面的底牌？旧期待付利息、留新期待了吗？任一问不过就按问改：没挣到→让结果落在他的选择或判断上；收益被拿走→补交换或让他拿回控制点；提前用了底牌→换成本卷已解锁的手段；没付利息→给旧期待一个小兑现再留新钩。不达标只修批准内容，修后重跑步骤 8；需补强、契约破坏都在本章汇报里告诉作者。"
     ]
@@ -131,10 +136,24 @@ async function section11Body(): Promise<string> {
   return `${intro}\n${body}`;
 }
 
-async function syncSection11(): Promise<void> {
+async function section12Body(): Promise<string> {
+  const source = await readFile(join(overlayRoot, "prose-surface.md"), "utf8");
+  const withoutTitle = source.replace(/^# .+\r?\n+/, "");
+  const demoted = withoutTitle.replace(/^## /gm, "### ");
+  const intro = [
+    "## 12. 句子表面",
+    "",
+    "只在写长篇正文时执行。拆书、扫榜、导入不读本节，也不跑下面的检查。写手只读本节，不另读 prose-surface.md。本书文风和作者本轮明确约束优先。",
+    ""
+  ].join("\n");
+  const body = demoted.endsWith("\n") ? demoted : `${demoted}\n`;
+  return `${intro}\n${body}`;
+}
+
+async function syncCraftSections(): Promise<void> {
   const target = join(ohStoryRoot, "skills/story-setup/references/agent-references/writing-craft.md");
   const text = await readFile(target, "utf8");
-  const section = await section11Body();
+  const section = `${await section11Body()}${await section12Body()}`;
   const marker = "## 11. 场面语法";
   const index = text.indexOf(marker);
   const next = index === -1
@@ -153,7 +172,7 @@ export async function applyStoryCraft(): Promise<void> {
     await copyFile(join(overlayRoot, sourceName), target);
   }
   for (const entry of replacements) await replaceOnce(entry);
-  await syncSection11();
+  await syncCraftSections();
 }
 
 const invokedDirectly = process.argv[1] !== undefined
