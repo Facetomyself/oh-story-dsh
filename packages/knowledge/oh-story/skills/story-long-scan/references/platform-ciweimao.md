@@ -1,14 +1,14 @@
 # 刺猬猫：采集与分析
 
-作者选了刺猬猫才读本文。本版本没有刺猬猫 provider。不要启动 CDP，也不要把下文命令改回采集脚本。作者没有提供榜单时，结论不含刺猬猫。分析维度只作历史对照。
+作者选了刺猬猫才读本文。采集只走本技能 `bridge/rankmin_cli.py` 的 App 排行。不要启动 CDP，不要注册游客，不要下章节。缺账号、login_token 或 device_token 时命令失败并指出缺的环境变量。
 
 ## 榜单与命令
 
-本版本不执行采集命令。click / favor / recommend / subscribe / monthly / tsukkomi / newbook / blade 只说明榜曾经怎么分。
+在技能目录执行 `python3 bridge/rankmin_cli.py --out {输出目录} --limit 20 --ciweimao fans_value:week,favor:week,tsukkomi:week,yp_new:month`。别名是 `order:time_type`，例如 `favor:week`、`yp:month`。不要全采，不要读 tokens.json，不要下章节。
 
 ## 字段
 
-排名、书名、作者（仅榜首条目带）、题材（其余条目带）、榜单值（聚合的热度口径；各榜含义不同，不跨榜比较）、作品页链接。刺猬猫是小平台：同方向不到 10 本才算稀疏，聚合时加 `--sparse 10`。
+排名、书名、作者、字数、作品页。题材和榜单值只有接口带了才写，没有就标 [待补]，不要下章节补。刺猬猫是小平台：同方向不到 10 本才算稀疏。
 
 ## 分析维度
 

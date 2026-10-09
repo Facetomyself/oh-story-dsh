@@ -1,10 +1,10 @@
 ### Phase 2：确定数据来源
 
-**扫榜需要真实数据支撑。** 起点和番茄只跑本技能目录里的 `bridge/rankmin_cli.py`。它是匿名 HTTP，不带 Cookie，不进详情页，也不保存原始 HTML。七猫、晋江、刺猬猫本版本没有 provider。
+**扫榜需要真实数据支撑。** 起点、番茄和刺猬猫只跑本技能目录里的 `bridge/rankmin_cli.py`。起点和番茄是匿名 HTTP，不带 Cookie，不进详情页，也不保存原始 HTML。刺猬猫走 App 排行，会话只读环境变量。七猫、晋江本版本没有 provider。
 
 | 优先级 | 模式 | 说明 | 何时用 |
 |--------|------|------|--------|
-| 1 | **rankmin** | 起点移动榜、番茄榜单页，写出榜单 markdown | 选了起点或番茄 |
+| 1 | **rankmin** | 起点移动榜、番茄榜单页、刺猬猫 App 排行，写出榜单 markdown | 选了起点、番茄或刺猬猫 |
 | 2 | **用户提供** | 用户粘贴榜单截图/文字 | 用户已有数据，或平台没有 provider |
 | 3 | **内置知识** | 基于知识库趋势数据做分析 | 命令失败且用户无数据时 |
 
@@ -16,9 +16,17 @@
 4. 退出码 2、缺模块或请求失败：该榜这次没拿到。不要编造名次，不要改走 CDP，也不要去作品页或章节页补标题。番茄若报私用区字段，报告里写明缺的是哪个字段。
 5. 同方向不到 15 本标「少」，等同 `[数据稀疏]`。要看某一条的简介，直接打开对应 markdown，一次一个方向。
 
-#### 七猫、晋江、刺猬猫
+#### 刺猬猫
 
-本版本没有 provider。不要启动 CDP，也不要把 [七猫](references/platform-qimao.md) / [晋江](references/platform-jjwxc.md) / [刺猬猫](references/platform-ciweimao.md) 里的旧命令改回去跑。作者没提供榜单时，结论不含这些平台。分析维度只作历史对照。
+1. 平台参考只读分析维度：[刺猬猫](references/platform-ciweimao.md)。不要执行参考里的旧命令，不要启动 CDP。
+2. 同一条命令加 `--ciweimao fans_value:week,favor:week,tsukkomi:week,yp_new:month`。作者点名的榜换成 `order:time_type`，不要一次扫完全部。
+3. 成功时写出 `刺猬猫{榜}_{日期}.md`。会话只读 `CIWEIMAO_ACCOUNT`、`CIWEIMAO_LOGIN_TOKEN`、`CIWEIMAO_DEVICE_TOKEN`。不要读 `tokens.json`，不要注册游客，不要下章节。
+4. 退出码 2：该榜这次没拿到。缺哪个环境变量、或书名缺了哪个 `book_id`，报告里照命令原文写。榜单值写 `[待补]` 时不要改去作品页补。
+5. 同方向不到 10 本标「少」。
+
+#### 七猫、晋江
+
+本版本没有 provider。不要启动 CDP，也不要把 [七猫](references/platform-qimao.md) / [晋江](references/platform-jjwxc.md) 里的旧命令改回去跑。作者没提供榜单时，结论不含这些平台。分析维度只作历史对照。
 
 #### 其他数据来源
 

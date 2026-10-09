@@ -354,18 +354,23 @@
     },
     {
       "path": "skills/story-long-scan/SKILL.md",
-      "sha256": "9ba09869b7b777b9bfda4c9766491f910901a04b90c71c7a8cb2c2a5317549d1",
-      "bytes": 10225
+      "sha256": "e7cfc6e1518dfc56040d207236ae87296bb801e3b96e2e61fb82cb3f50439e14",
+      "bytes": 11035
     },
     {
       "path": "skills/story-long-scan/bridge/rankmin/__init__.py",
-      "sha256": "c4f2b0f7fd7802a0a9600d5381b171e5924ec431cb128be03d15d5546f664e6a",
-      "bytes": 190
+      "sha256": "a908a80b7637e1d39ebd6284ad4eb286c72d2cc46b95d49206ca90de42325bc2",
+      "bytes": 270
     },
     {
       "path": "skills/story-long-scan/bridge/rankmin/__main__.py",
-      "sha256": "c1175a3fb7288515b10679ade4bd658b635330b27627324509d925db16297eec",
-      "bytes": 6295
+      "sha256": "278bcd78876ebede6e1b194282b7e7d7ea3625e31f7d225751655dc7f16579bc",
+      "bytes": 10182
+    },
+    {
+      "path": "skills/story-long-scan/bridge/rankmin/ciweimao.py",
+      "sha256": "95e840eac33d0c9000dde7e98597bd475f9a116182651db24ca43a301acc609c",
+      "bytes": 15858
     },
     {
       "path": "skills/story-long-scan/bridge/rankmin/contracts.py",
@@ -379,13 +384,13 @@
     },
     {
       "path": "skills/story-long-scan/bridge/rankmin/http_client.py",
-      "sha256": "0bf5362f30bbd7d2ca8063f93555eed50661e3bc5e22d2788ead2b9184ec83c1",
-      "bytes": 3566
+      "sha256": "ef4af9d33ae7996b298b2be8354f245d33a2f086674c091a6207c09e296024c0",
+      "bytes": 4265
     },
     {
       "path": "skills/story-long-scan/bridge/rankmin/markdown_out.py",
-      "sha256": "8d8e3eb2980a85f86b683c90b60aae7eb2cab979371698e7c051689c7a5b2362",
-      "bytes": 3305
+      "sha256": "3bed78d34c3c5f6765b63daee11a979d35b3b86b46e387175aa155594f0bfffa",
+      "bytes": 4226
     },
     {
       "path": "skills/story-long-scan/bridge/rankmin/qidian.py",
@@ -409,8 +414,8 @@
     },
     {
       "path": "skills/story-long-scan/references/platform-ciweimao.md",
-      "sha256": "f06a53c48a6214f962eccb7f9c8c4f2b254bd67ce01bd839ed830b5cbd61af79",
-      "bytes": 882
+      "sha256": "edb61aa5396347a11e914e1e80368217c7a623958c8b27416ee80e555dff085a",
+      "bytes": 969
     },
     {
       "path": "skills/story-long-scan/references/platform-fanqie.md",
@@ -1614,8 +1619,8 @@
     },
     {
       "path": "skills/story-short-scan/SKILL.md",
-      "sha256": "eadac541b5f635e6b7994bd866b021bf498092efcc0a1f761e0a6dc8b1e9fd9e",
-      "bytes": 9291
+      "sha256": "7ecb8ae6589f1c76f221c0ed567fd4816f9e59b3aeef2891ce995f93088addf4",
+      "bytes": 9303
     },
     {
       "path": "skills/story-short-scan/references/manual-rank-input.md",

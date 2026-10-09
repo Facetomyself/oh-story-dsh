@@ -110,7 +110,9 @@ describe("Oh Story bundled skill provider", () => {
     const longScan = await provider.get(candidates.find((value) => value.name === "story-long-scan")!, {});
     expect(longScan?.content).toContain("选题决策.md");
     expect(longScan?.content).toContain("bridge/rankmin_cli.py");
+    expect(longScan?.content).toContain("--ciweimao");
     expect(longScan?.content).toContain("本版本没有 provider");
+    expect(longScan?.content).not.toContain("刺猬猫本版本没有");
     expect(longScan?.content).not.toContain("browser-cdp");
     expect((await provider.get(candidates.find((value) => value.name === "story-short-scan")!, {}))?.content).toContain("短篇扫榜结论.md");
     const shortScan = await provider.get(candidates.find((value) => value.name === "story-short-scan")!, {});

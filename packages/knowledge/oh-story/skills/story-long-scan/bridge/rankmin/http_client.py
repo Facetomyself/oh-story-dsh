@@ -68,15 +68,7 @@ class HttpResponse:
     error: str = ""
 
 
-def fetch_text(url: str, timeout: int = 25, headers: dict[str, str] | None = None) -> HttpResponse:
-    merged_headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
-    }
-    if headers:
-        merged_headers.update(headers)
-    request = urllib.request.Request(url, headers=merged_headers)
+def _exchange(request: urllib.request.Request, timeout: int, url: str) -> HttpResponse:
     context = ssl.create_default_context()
     try:
         with urllib.request.urlopen(request, timeout=timeout, context=context) as response:
@@ -102,3 +94,34 @@ def fetch_text(url: str, timeout: int = 25, headers: dict[str, str] | None = Non
         )
     except Exception as exc:
         return HttpResponse(url=url, status=None, headers={}, text="", error=repr(exc))
+
+
+def fetch_text(url: str, timeout: int = 25, headers: dict[str, str] | None = None) -> HttpResponse:
+    merged_headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+    }
+    if headers:
+        merged_headers.update(headers)
+    request = urllib.request.Request(url, headers=merged_headers)
+    return _exchange(request, timeout, url)
+
+
+def post_form(
+    url: str,
+    fields: dict[str, str],
+    timeout: int = 25,
+    headers: dict[str, str] | None = None,
+) -> HttpResponse:
+    from urllib.parse import urlencode
+
+    merged_headers = {
+        "Accept": "application/json, text/plain, */*",
+        "Content-Type": "application/x-www-form-urlencoded",
+    }
+    if headers:
+        merged_headers.update(headers)
+    body = urlencode(fields).encode("utf-8")
+    request = urllib.request.Request(url, data=body, headers=merged_headers, method="POST")
+    return _exchange(request, timeout, url)

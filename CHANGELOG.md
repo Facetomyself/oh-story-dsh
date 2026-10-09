@@ -11,6 +11,12 @@
 
 ## [Unreleased]
 
+## [0.1.17] - 2026-10-09
+
+### Added
+
+- 长篇扫榜增加刺猬猫 App 排行：`bridge/rankmin` 只请求 `/bookcity/get_rank_book_list`。会话读 `CIWEIMAO_ACCOUNT`、`CIWEIMAO_LOGIN_TOKEN`、`CIWEIMAO_DEVICE_TOKEN`，缺了就失败并指出变量名。不下章节，不注册游客。七猫、晋江本版本没有 provider。
+
 ## [0.1.16] - 2026-10-09
 
 ### Added

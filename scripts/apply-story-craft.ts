@@ -125,9 +125,11 @@ const replacements: readonly Replacement[] = [
   },
   {
     path: "skills/story-long-scan/SKILL.md",
-    to: `| 五份平台参考（链接见 Phase 2） | 起点、番茄读「分析维度」和字段；七猫、晋江、刺猬猫本版本没有 provider，不执行其中的采集命令 |
+    to: `| 五份平台参考（链接见 Phase 2） | 起点、番茄、刺猬猫读「分析维度」和字段；七猫、晋江本版本没有 provider，不执行其中的采集命令 |
+| [bridge/rankmin_cli.py](bridge/rankmin_cli.py) | 起点移动榜、番茄榜单页、刺猬猫 App 排行。\`--self-test\` 不联网。失败退出码 2，不编造榜单 |`,
+    from: [`| 五份平台参考（链接见 Phase 2） | 起点、番茄读「分析维度」和字段；七猫、晋江、刺猬猫本版本没有 provider，不执行其中的采集命令 |
 | [bridge/rankmin_cli.py](bridge/rankmin_cli.py) | 起点移动榜和番茄榜单页。\`--self-test\` 不联网。失败退出码 2，不编造榜单 |`,
-    from: [`| 五份平台参考（链接见「脚本采集模式」第 1 步） | 「确定数据来源」：只读所选平台那份——榜单网址、命令、字段、故障排查、平台分析维度 |
+      `| 五份平台参考（链接见「脚本采集模式」第 1 步） | 「确定数据来源」：只读所选平台那份——榜单网址、命令、字段、故障排查、平台分析维度 |
 | [scripts/aggregate-rank.js](scripts/aggregate-rank.js) | 把输出目录里的原始榜单聚合成短表（\`--out\` 落盘，\`--sample\` 抽原始条目，\`--json\` 机读），主会话只读它 |
 | [scripts/cdp-utils.js](scripts/cdp-utils.js) | CDP 公共工具函数（ab/sleep/evalJSON/safeStr/scrollLoad/getArg），各采集脚本共用 |
 | [scripts/fanqie-rank-scraper.js](scripts/fanqie-rank-scraper.js) | 番茄榜单采集，用法见番茄参考 |
@@ -173,8 +175,11 @@ const replacements: readonly Replacement[] = [
   },
   {
     path: "skills/story-long-scan/references/platform-ciweimao.md",
-    to: "作者选了刺猬猫才读本文。本版本没有刺猬猫 provider。不要启动 CDP，也不要把下文命令改回采集脚本。作者没有提供榜单时，结论不含刺猬猫。分析维度只作历史对照。",
-    from: ["作者选了刺猬猫才读本文。需先用 `/browser-cdp` 启动 Chrome。rank-index 单页展示全部榜单，脚本按文本解析，按书名归一回填作品页链接，带连通性自检与空结果重试。"]
+    to: "作者选了刺猬猫才读本文。采集只走本技能 `bridge/rankmin_cli.py` 的 App 排行。不要启动 CDP，不要注册游客，不要下章节。缺账号、login_token 或 device_token 时命令失败并指出缺的环境变量。",
+    from: [
+      "作者选了刺猬猫才读本文。本版本没有刺猬猫 provider。不要启动 CDP，也不要把下文命令改回采集脚本。作者没有提供榜单时，结论不含刺猬猫。分析维度只作历史对照。",
+      "作者选了刺猬猫才读本文。需先用 `/browser-cdp` 启动 Chrome。rank-index 单页展示全部榜单，脚本按文本解析，按书名归一回填作品页链接，带连通性自检与空结果重试。"
+    ]
   },
   {
     path: "skills/story-long-scan/references/platform-qimao.md",
@@ -188,8 +193,16 @@ const replacements: readonly Replacement[] = [
   },
   {
     path: "skills/story-long-scan/references/platform-ciweimao.md",
-    to: "本版本不执行采集命令。click / favor / recommend / subscribe / monthly / tsukkomi / newbook / blade 只说明榜曾经怎么分。",
-    from: ["`node scripts/ciweimao-rank-scraper.js --type {榜单} --outdir {输出目录}`：click 点击榜 / favor 收藏榜 / recommend 推荐榜 / subscribe 订阅榜 / monthly 月票榜 / tsukkomi 吐槽榜 / newbook 新书榜 / blade 刀片榜 / all 全部（默认）。"]
+    to: "排名、书名、作者、字数、作品页。题材和榜单值只有接口带了才写，没有就标 [待补]，不要下章节补。刺猬猫是小平台：同方向不到 10 本才算稀疏。",
+    from: ["排名、书名、作者（仅榜首条目带）、题材（其余条目带）、榜单值（聚合的热度口径；各榜含义不同，不跨榜比较）、作品页链接。刺猬猫是小平台：同方向不到 10 本才算稀疏，聚合时加 `--sparse 10`。"]
+  },
+  {
+    path: "skills/story-long-scan/references/platform-ciweimao.md",
+    to: "在技能目录执行 `python3 bridge/rankmin_cli.py --out {输出目录} --limit 20 --ciweimao fans_value:week,favor:week,tsukkomi:week,yp_new:month`。别名是 `order:time_type`，例如 `favor:week`、`yp:month`。不要全采，不要读 tokens.json，不要下章节。",
+    from: [
+      "本版本不执行采集命令。click / favor / recommend / subscribe / monthly / tsukkomi / newbook / blade 只说明榜曾经怎么分。",
+      "`node scripts/ciweimao-rank-scraper.js --type {榜单} --outdir {输出目录}`：click 点击榜 / favor 收藏榜 / recommend 推荐榜 / subscribe 订阅榜 / monthly 月票榜 / tsukkomi 吐槽榜 / newbook 新书榜 / blade 刀片榜 / all 全部（默认）。"
+    ]
   },
   {
     path: "skills/story-long-scan/references/platform-fanqie.md",
@@ -218,8 +231,11 @@ const replacements: readonly Replacement[] = [
   },
   {
     path: "skills/story-short-scan/SKILL.md",
-    to: "**核心信念：短篇市场变化快，题材信号有效期短。** 扫榜报告必须标注样本日期、趋势可信度和下次重新扫榜的时间。长篇起点和番茄不在这里采集，走 story-long-scan 的 `bridge/rankmin_cli.py`。",
-    from: ["**核心信念：短篇市场变化快，题材信号有效期短。** 扫榜报告必须标注样本日期、趋势可信度和下次重新扫榜的时间。"]
+    to: "**核心信念：短篇市场变化快，题材信号有效期短。** 扫榜报告必须标注样本日期、趋势可信度和下次重新扫榜的时间。长篇起点、番茄和刺猬猫不在这里采集，走 story-long-scan 的 `bridge/rankmin_cli.py`。",
+    from: [
+      "**核心信念：短篇市场变化快，题材信号有效期短。** 扫榜报告必须标注样本日期、趋势可信度和下次重新扫榜的时间。长篇起点和番茄不在这里采集，走 story-long-scan 的 `bridge/rankmin_cli.py`。",
+      "**核心信念：短篇市场变化快，题材信号有效期短。** 扫榜报告必须标注样本日期、趋势可信度和下次重新扫榜的时间。"
+    ]
   }
 ];
 
