@@ -11,6 +11,12 @@
 
 ## [Unreleased]
 
+## [0.1.18] - 2026-10-09
+
+### Changed
+
+- 刺猬猫扫榜改为带上 `ciweimao-api-reverse` 的协议客户端 `bridge/ciweimao_app`：签名、响应解密、游客注册和排行请求都走原模块。没有账号环境变量时自己注册游客，会话写在运行用户的 `~/.dsh/ciweimao-guest.json`。出口与采集器相同：`CIWEIMAO_PROXY_URL`，或 `KDL_SECRET_ID` / `KDL_SECRET_KEY`（也可放在 `~/.dsh/ciweimao/`）。需要 `curl_cffi`、`pycryptodome` 和 `kdl`。不下章节。
+
 ## [0.1.17] - 2026-10-09
 
 ### Added

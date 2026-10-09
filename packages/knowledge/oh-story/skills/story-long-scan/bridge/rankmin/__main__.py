@@ -7,8 +7,6 @@ from pathlib import Path
 
 from .ciweimao import (
     DEFAULT_CATEGORIES as CIWEIMAO_DEFAULTS,
-    aes_cbc_decrypt,
-    load_credentials,
     normalize_ciweimao,
     parse_ciweimao_rank,
     resolve_ciweimao_category,
@@ -141,21 +139,29 @@ def self_test() -> int:
         print("missing qidian marker did not fail", file=sys.stderr)
         return 2
     checks += 1
-    from .ciweimao import _crypt_block, _expand_key
-
-    nist_key = bytes.fromhex("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")
-    nist_plain = bytes.fromhex("00112233445566778899aabbccddeeff")
-    nist_cipher = bytes.fromhex("8ea2b7ca516745bfeafc49904b496089")
-    words = _expand_key(nist_key)
-    if _crypt_block(nist_plain, words, False) != nist_cipher:
-        print("ciweimao aes block failed", file=sys.stderr)
+    bridge = Path(__file__).resolve().parents[1]
+    if str(bridge) not in sys.path:
+        sys.path.insert(0, str(bridge))
+    try:
+        from ciweimao_app.api import Session
+        from ciweimao_app.protocol import sign_request
+    except ModuleNotFoundError as exc:
+        print(f"ciweimao missing module: {exc.name}", file=sys.stderr)
         return 2
-    iv = bytes(16)
-    first = _crypt_block(bytes(a ^ b for a, b in zip(nist_plain, iv)), words, False)
-    padding = bytes([16]) * 16
-    second = _crypt_block(bytes(a ^ b for a, b in zip(padding, first)), words, False)
-    if aes_cbc_decrypt(first + second, nist_key, iv) != nist_plain:
-        print("ciweimao aes cbc failed", file=sys.stderr)
+    signed = sign_request("acct", "2.9.365", "0011223344556677")
+    if signed.get("rand_str") != "0011223344556677" or len(signed.get("p") or "") < 40:
+        print("ciweimao client sign failed", file=sys.stderr)
+        return 2
+    if not callable(Session):
+        print("ciweimao client session missing", file=sys.stderr)
+        return 2
+    from .ciweimao_egress import build_proxy_url
+
+    if build_proxy_url("203.0.113.8:8080", "", "") != "http://203.0.113.8:8080":
+        print("ciweimao proxy endpoint failed", file=sys.stderr)
+        return 2
+    if build_proxy_url("203.0.113.8:8080", "user", "pw") != "http://user:pw@203.0.113.8:8080":
+        print("ciweimao proxy auth endpoint failed", file=sys.stderr)
         return 2
     checks += 1
     source = ciweimao_source("fans_value:week")
@@ -198,17 +204,6 @@ def self_test() -> int:
         checks += 1
     else:
         print("unknown ciweimao rank was accepted", file=sys.stderr)
-        return 2
-    try:
-        load_credentials({})
-    except RankFetchError as exc:
-        message = str(exc)
-        if "CIWEIMAO_ACCOUNT" not in message or "CIWEIMAO_LOGIN_TOKEN" not in message or "CIWEIMAO_DEVICE_TOKEN" not in message:
-            print("ciweimao missing env was not named", file=sys.stderr)
-            return 2
-        checks += 1
-    else:
-        print("empty ciweimao env was accepted", file=sys.stderr)
         return 2
     blank = parse_ciweimao_rank(
         {"code": "100000", "data": {"book_list": [{"book_id": "1002", "book_name": ""}]}},

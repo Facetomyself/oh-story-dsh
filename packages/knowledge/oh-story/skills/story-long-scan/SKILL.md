@@ -43,7 +43,7 @@ metadata: {"openclaw":{"source":"https://github.com/zenstory-ai/oh-story-claudec
 
 ### Phase 2：确定数据来源
 
-**扫榜需要真实数据支撑。** 起点、番茄和刺猬猫只跑本技能目录里的 `bridge/rankmin_cli.py`。起点和番茄是匿名 HTTP，不带 Cookie，不进详情页，也不保存原始 HTML。刺猬猫走 App 排行，会话只读环境变量。七猫、晋江本版本没有 provider。
+**扫榜需要真实数据支撑。** 起点、番茄和刺猬猫只跑本技能目录里的 `bridge/rankmin_cli.py`。起点和番茄是匿名 HTTP，不带 Cookie，不进详情页，也不保存原始 HTML。刺猬猫走同目录的 `bridge/ciweimao_app`，也就是 App 采集器的协议客户端。七猫、晋江本版本没有 provider。
 
 | 优先级 | 模式 | 说明 | 何时用 |
 |--------|------|------|--------|
@@ -63,8 +63,8 @@ metadata: {"openclaw":{"source":"https://github.com/zenstory-ai/oh-story-claudec
 
 1. 平台参考只读分析维度：[刺猬猫](references/platform-ciweimao.md)。不要执行参考里的旧命令，不要启动 CDP。
 2. 同一条命令加 `--ciweimao fans_value:week,favor:week,tsukkomi:week,yp_new:month`。作者点名的榜换成 `order:time_type`，不要一次扫完全部。
-3. 成功时写出 `刺猬猫{榜}_{日期}.md`。会话只读 `CIWEIMAO_ACCOUNT`、`CIWEIMAO_LOGIN_TOKEN`、`CIWEIMAO_DEVICE_TOKEN`。不要读 `tokens.json`，不要注册游客，不要下章节。
-4. 退出码 2：该榜这次没拿到。缺哪个环境变量、或书名缺了哪个 `book_id`，报告里照命令原文写。榜单值写 `[待补]` 时不要改去作品页补。
+3. 成功时写出 `刺猬猫{榜}_{日期}.md`。没有账号环境变量时，客户端按自己的游客注册取得会话，写在运行用户的 `~/.dsh/ciweimao-guest.json`。出口与采集器相同：`CIWEIMAO_PROXY_URL`，或 `KDL_SECRET_ID` / `KDL_SECRET_KEY`，密钥文件也可放在 `~/.dsh/ciweimao/`。不要读 `tokens.json`，不要把会话或代理地址写进报告，不要下章节。
+4. 退出码 2：该榜这次没拿到。缺模块、注册失败或书名缺了哪个 `book_id`，报告里照命令原文写。榜单值写 `[待补]` 时不要改去作品页补。
 5. 同方向不到 10 本标「少」。
 
 #### 七猫、晋江

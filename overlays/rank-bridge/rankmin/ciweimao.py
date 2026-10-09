@@ -1,36 +1,29 @@
-"""Ciweimao app rank list only.
+"""Ciweimao app rank list.
 
-Reads /bookcity/get_rank_book_list. Session values come from the environment.
-This module does not register a guest, solve a captcha, or download chapters.
+The request path is the copied client in bridge/ciweimao_app: sign, decrypt,
+guest registration, and Session.get_rank_books. This file only maps that
+book_list into the scan markdown.
 """
 
 from __future__ import annotations
 
-import base64
-import hashlib
-import hmac
+import asyncio
 import json
 import os
-import secrets
+import sys
+from pathlib import Path
 from typing import Any, Mapping
-from urllib.parse import quote
 
 from .contracts import ParseResult, RankFetchError, RankItem, RankSnapshot, SourceSpec
-from .http_client import post_form
 from .textutil import now_cst_iso
 
 PARSER_VERSION = "ciweimao_app_rank_v1"
-APP_VERSION = "2.9.365"
 BASE_URL = "https://app1.happybooker.cn"
 RANK_PATH = "/bookcity/get_rank_book_list"
-USER_AGENT = f"Android com.kuangxiangciweimao.novel {APP_VERSION}"
-# App 2.9.328+ request signature and 2.9.352+ response key. Not a user credential.
-_SIGN_KEY = "a90f3731745f1c30ee77cb13fc00005a"
-_SIGN_SUFFIX = "CkMxWNB666"
-_RESPONSE_KEY = "sD6doAOcW7hm7iaeK6UlcdtAIWlZGlBr"
 _ENV_ACCOUNT = "CIWEIMAO_ACCOUNT"
 _ENV_LOGIN = "CIWEIMAO_LOGIN_TOKEN"
 _ENV_DEVICE = "CIWEIMAO_DEVICE_TOKEN"
+
 _TIMES = ("week", "month", "total")
 _ORDERS = (
     "fans_value",
@@ -93,165 +86,6 @@ _SCORE_KEYS = (
     "hot_value",
 )
 
-
-def _gf_mul(left: int, right: int) -> int:
-    product = 0
-    for _ in range(8):
-        if right & 1:
-            product ^= left
-        left <<= 1
-        if left & 0x100:
-            left ^= 0x11B
-        right >>= 1
-    return product & 0xFF
-
-
-def _rotl8(value: int, shift: int) -> int:
-    return ((value << shift) | (value >> (8 - shift))) & 0xFF
-
-
-def _sbox_table() -> tuple[bytes, bytes]:
-    forward = [0] * 256
-    for value in range(256):
-        inverse = 0
-        if value:
-            for candidate in range(1, 256):
-                if _gf_mul(value, candidate) == 1:
-                    inverse = candidate
-                    break
-        substituted = inverse
-        substituted ^= _rotl8(inverse, 1) ^ _rotl8(inverse, 2)
-        substituted ^= _rotl8(inverse, 3) ^ _rotl8(inverse, 4) ^ 0x63
-        forward[value] = substituted & 0xFF
-    inverse_box = [0] * 256
-    for index, substituted in enumerate(forward):
-        inverse_box[substituted] = index
-    return bytes(forward), bytes(inverse_box)
-
-
-_SBOX, _INV_SBOX = _sbox_table()
-_RCON = (0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36)
-
-
-def _xor_words(left: bytes, right: bytes) -> bytes:
-    return bytes(a ^ b for a, b in zip(left, right))
-
-
-def _sub_word(word: bytes, box: bytes) -> bytes:
-    return bytes(box[part] for part in word)
-
-
-def _expand_key(key: bytes) -> list[bytes]:
-    if len(key) != 32:
-        raise ValueError("AES-256 key must be 32 bytes")
-    words = [key[index:index + 4] for index in range(0, 32, 4)]
-    for index in range(8, 60):
-        temp = words[index - 1]
-        if index % 8 == 0:
-            rotated = temp[1:] + temp[:1]
-            temp = _xor_words(_sub_word(rotated, _SBOX), bytes((_RCON[index // 8], 0, 0, 0)))
-        elif index % 8 == 4:
-            temp = _sub_word(temp, _SBOX)
-        words.append(_xor_words(words[index - 8], temp))
-    return words
-
-
-def _mix_column(column: bytes, matrix: tuple[tuple[int, int, int, int], ...]) -> bytes:
-    mixed = []
-    for row in matrix:
-        mixed.append(
-            _gf_mul(column[0], row[0])
-            ^ _gf_mul(column[1], row[1])
-            ^ _gf_mul(column[2], row[2])
-            ^ _gf_mul(column[3], row[3])
-        )
-    return bytes(mixed)
-
-
-_ENC_MATRIX = ((2, 3, 1, 1), (1, 2, 3, 1), (1, 1, 2, 3), (3, 1, 1, 2))
-_DEC_MATRIX = ((14, 11, 13, 9), (9, 14, 11, 13), (13, 9, 14, 11), (11, 13, 9, 14))
-
-
-def _shift_rows(state: bytearray, inverse: bool) -> None:
-    for row in range(1, 4):
-        shift = (4 - row) if inverse else row
-        cells = [state[row + 4 * column] for column in range(4)]
-        for column in range(4):
-            state[row + 4 * column] = cells[(column + shift) % 4]
-
-
-def _mix_columns(state: bytearray, matrix: tuple[tuple[int, int, int, int], ...]) -> None:
-    for column in range(4):
-        mixed = _mix_column(bytes(state[4 * column:4 * column + 4]), matrix)
-        state[4 * column:4 * column + 4] = mixed
-
-
-def _add_round_key(state: bytearray, words: list[bytes], round_index: int) -> None:
-    block = b"".join(words[4 * round_index:4 * round_index + 4])
-    for index, value in enumerate(block):
-        state[index] ^= value
-
-
-def _crypt_block(block: bytes, words: list[bytes], decrypt: bool) -> bytes:
-    state = bytearray(block)
-    if not decrypt:
-        _add_round_key(state, words, 0)
-        for round_index in range(1, 14):
-            for index, value in enumerate(state):
-                state[index] = _SBOX[value]
-            _shift_rows(state, False)
-            _mix_columns(state, _ENC_MATRIX)
-            _add_round_key(state, words, round_index)
-        for index, value in enumerate(state):
-            state[index] = _SBOX[value]
-        _shift_rows(state, False)
-        _add_round_key(state, words, 14)
-        return bytes(state)
-    _add_round_key(state, words, 14)
-    for round_index in range(13, 0, -1):
-        _shift_rows(state, True)
-        for index, value in enumerate(state):
-            state[index] = _INV_SBOX[value]
-        _add_round_key(state, words, round_index)
-        _mix_columns(state, _DEC_MATRIX)
-    _shift_rows(state, True)
-    for index, value in enumerate(state):
-        state[index] = _INV_SBOX[value]
-    _add_round_key(state, words, 0)
-    return bytes(state)
-
-
-def aes_cbc_decrypt(ciphertext: bytes, key: bytes, iv: bytes) -> bytes:
-    if len(ciphertext) == 0 or len(ciphertext) % 16 != 0:
-        raise ValueError("ciphertext length")
-    words = _expand_key(key)
-    previous = iv
-    plain = bytearray()
-    for offset in range(0, len(ciphertext), 16):
-        block = ciphertext[offset:offset + 16]
-        plain.extend(byte ^ previous[index] for index, byte in enumerate(_crypt_block(block, words, True)))
-        previous = block
-    pad = plain[-1]
-    if pad < 1 or pad > 16 or plain[-pad:] != bytes([pad]) * pad:
-        raise ValueError("pkcs7")
-    return bytes(plain[:-pad])
-
-
-def decrypt_response(response_b64: str, key_str: str = _RESPONSE_KEY) -> bytes:
-    raw = "".join(response_b64.split())
-    ciphertext = base64.b64decode(raw, validate=False)
-    key = hashlib.sha256(key_str.encode("utf-8")).digest()
-    return aes_cbc_decrypt(ciphertext, key, bytes(16))
-
-
-def sign_request(account: str, app_version: str, rand_str: str) -> dict[str, str]:
-    encoded = quote(str(account), safe="")
-    source = (
-        f"account={encoded}&app_version={app_version}"
-        f"&rand_str={rand_str}&signatures={_SIGN_KEY}{_SIGN_SUFFIX}"
-    )
-    digest = hmac.new(_SIGN_KEY.encode("utf-8"), source.encode("utf-8"), hashlib.sha256).digest()
-    return {"rand_str": rand_str, "p": base64.b64encode(digest).decode("ascii")}
 
 
 def resolve_ciweimao_category(category: str) -> str:
@@ -392,35 +226,126 @@ def normalize_ciweimao(source: SourceSpec, parsed: ParseResult) -> RankSnapshot:
     )
 
 
-def load_credentials(env: Mapping[str, str] | None = None) -> tuple[str, str, str]:
-    source = os.environ if env is None else env
-    values = {
-        _ENV_ACCOUNT: _text(source.get(_ENV_ACCOUNT)),
-        _ENV_LOGIN: _text(source.get(_ENV_LOGIN)),
-        _ENV_DEVICE: _text(source.get(_ENV_DEVICE)),
+
+def _client():
+    bridge = Path(__file__).resolve().parents[1]
+    bridge_text = str(bridge)
+    if bridge_text not in sys.path:
+        sys.path.insert(0, bridge_text)
+    try:
+        from ciweimao_app.api import ApiError, Session
+        from ciweimao_app.guest import GuestRegistrationError, register_guest
+        from ciweimao_app import config as client_config
+    except ModuleNotFoundError as exc:
+        name = exc.name or "ciweimao_app"
+        raise RankFetchError(f"ciweimao missing module: {name}") from exc
+    return ApiError, Session, GuestRegistrationError, register_guest, client_config
+
+
+def state_path() -> Path:
+    override = _text(os.environ.get("CIWEIMAO_STATE"))
+    if override:
+        return Path(override)
+    return Path.home() / ".dsh" / "ciweimao-guest.json"
+
+
+def _read_state(path: Path) -> dict[str, str] | None:
+    if not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    account = _text(data.get("account"))
+    login_token = _text(data.get("login_token"))
+    if not account or not login_token:
+        return None
+    return {
+        "account": account,
+        "login_token": login_token,
+        "device_token": _text(data.get("device_token")),
     }
-    missing = [name for name, value in values.items() if not value]
+
+
+def _write_state(path: Path, account: str, login_token: str, device_token: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({
+        "account": account,
+        "login_token": login_token,
+        "device_token": device_token,
+    }, ensure_ascii=False), encoding="utf-8")
+    try:
+        os.chmod(path, 0o600)
+    except OSError:
+        pass
+
+
+def _env_session(env: Mapping[str, str] | None) -> tuple[str, str, str] | None:
+    source = os.environ if env is None else env
+    account = _text(source.get(_ENV_ACCOUNT))
+    login_token = _text(source.get(_ENV_LOGIN))
+    device_token = _text(source.get(_ENV_DEVICE))
+    if not account and not login_token and not device_token:
+        return None
+    missing = [
+        name for name, value in (
+            (_ENV_ACCOUNT, account),
+            (_ENV_LOGIN, login_token),
+            (_ENV_DEVICE, device_token),
+        ) if not value
+    ]
     if missing:
         raise RankFetchError("ciweimao missing field: " + ",".join(missing))
-    return values[_ENV_ACCOUNT], values[_ENV_LOGIN], values[_ENV_DEVICE]
+    return account, login_token, device_token
 
 
-def _decode_body(text: str) -> dict[str, Any]:
-    raw = text.strip()
-    if not raw:
-        raise RankFetchError("ciweimao response empty")
+def _register_guest(proxy: str | None) -> tuple[str, str, str]:
+    _, _, guest_error, register_guest, client_config = _client()
     try:
-        if raw.startswith("{"):
-            data = json.loads(raw)
-        else:
-            data = json.loads(decrypt_response(raw).decode("utf-8"))
-    except RankFetchError:
-        raise
+        guest = asyncio.run(register_guest(proxy=proxy))
+    except guest_error as exc:
+        raise RankFetchError(f"ciweimao guest registration failed: code={exc.code}")
     except Exception as exc:
-        raise RankFetchError("ciweimao response decrypt failed") from exc
-    if not isinstance(data, dict):
-        raise RankFetchError("ciweimao response parse failed")
-    return data
+        raise RankFetchError(f"ciweimao guest registration failed: {type(exc).__name__}")
+    device = guest.device_token or client_config.DEVICE_TOKEN_PREFIX
+    _write_state(state_path(), guest.account, guest.login_token, device)
+    return guest.account, guest.login_token, device
+
+
+def _rank_books(
+    account: str,
+    login_token: str,
+    device_token: str,
+    order: str,
+    time_type: str,
+    limit: int,
+    proxy: str | None,
+) -> list:
+    api_error, session_cls, _, _, client_config = _client()
+    session = session_cls(
+        login_token=login_token,
+        account=account,
+        device_token=device_token or client_config.DEVICE_TOKEN_PREFIX,
+        app_version=client_config.APP_VERSION,
+        proxy=proxy,
+    )
+    try:
+        return session.get_rank_books(
+            order, time_type, page=0, count=max(1, min(int(limit), 100)),
+        )
+    except api_error as exc:
+        raise RankFetchError(f"ciweimao request failed: code={exc.code}")
+    finally:
+        session.close()
+
+
+def _refresh_guest(proxy: str | None) -> tuple[str, str, str]:
+    path = state_path()
+    if path.is_file():
+        path.unlink()
+    return _register_guest(proxy)
 
 
 def fetch_ciweimao_rank(
@@ -430,35 +355,53 @@ def fetch_ciweimao_rank(
 ) -> RankSnapshot:
     if limit < 1:
         raise RankFetchError("ciweimao limit must be at least 1")
+    from .ciweimao_egress import resolve_proxy
+
     source = ciweimao_source(category)
-    account, login_token, device_token = load_credentials(env)
     order, time_type = source.semantic_key.split(":", 1)
-    fields = {
-        "login_token": login_token,
-        "account": account,
-        "device_token": device_token,
-        "app_version": APP_VERSION,
-        "order": order,
-        "time_type": time_type,
-        "page": "0",
-        "count": str(max(1, min(int(limit), 100))),
-        "category_index": "0",
-    }
-    fields.update(sign_request(account, APP_VERSION, secrets.token_hex(8)))
-    response = post_form(
-        f"{BASE_URL}{RANK_PATH}",
-        fields,
-        headers={"User-Agent": USER_AGENT},
-    )
-    if response.error or response.status != 200 or not response.text:
-        raise RankFetchError(
-            f"ciweimao request failed: category={source.category} status={response.status}"
-        )
-    data = _decode_body(response.text)
-    code = _text(data.get("code"))
-    if code == "200100":
-        raise RankFetchError("ciweimao missing field: CIWEIMAO_LOGIN_TOKEN expired")
-    parsed = parse_ciweimao_rank(data, limit)
+    proxy = resolve_proxy()
+    supplied = _env_session(env)
+    from_env = supplied is not None
+    if supplied is None:
+        cached = _read_state(state_path())
+        if cached is None:
+            supplied = _register_guest(proxy)
+        else:
+            supplied = (cached["account"], cached["login_token"], cached["device_token"])
+    account, login_token, device_token = supplied
+
+    def _load() -> list:
+        try:
+            return _rank_books(
+                account, login_token, device_token, order, time_type, limit, proxy,
+            )
+        except RankFetchError:
+            raise
+        except RuntimeError as exc:
+            if "login_token 已过期" in str(exc):
+                raise RankFetchError("ciweimao request failed: code=200100")
+            raise RankFetchError("ciweimao request failed: session")
+        except Exception as exc:
+            raise RankFetchError(f"ciweimao request failed: {type(exc).__name__}")
+
+    def _load_or_reregister() -> list:
+        nonlocal account, login_token, device_token
+        try:
+            return _load()
+        except RankFetchError as exc:
+            if from_env or "code=200100" not in str(exc):
+                raise
+            account, login_token, device_token = _refresh_guest(proxy)
+            return _load()
+
+    try:
+        books = _load_or_reregister()
+    except RankFetchError as exc:
+        if "code=320002" not in str(exc):
+            raise
+        proxy = resolve_proxy(fresh=True)
+        books = _load_or_reregister()
+    parsed = parse_ciweimao_rank({"code": "100000", "data": {"book_list": books}}, limit)
     if not parsed.ok:
         detail = parsed.failure_detail or parsed.failure_code
         raise RankFetchError(f"ciweimao parse failed: category={source.category} code={detail}")

@@ -354,8 +354,58 @@
     },
     {
       "path": "skills/story-long-scan/SKILL.md",
-      "sha256": "e7cfc6e1518dfc56040d207236ae87296bb801e3b96e2e61fb82cb3f50439e14",
-      "bytes": 11035
+      "sha256": "0d490dff10ad00f1a7af63eaebb212fcf4955f30f04e7c02201196572580bd78",
+      "bytes": 11282
+    },
+    {
+      "path": "skills/story-long-scan/bridge/ciweimao_app/__init__.py",
+      "sha256": "55ed92f6cedd6420354e8678aee2258888178f3603419002f4fe470b6bbd61c8",
+      "bytes": 36
+    },
+    {
+      "path": "skills/story-long-scan/bridge/ciweimao_app/api.py",
+      "sha256": "b9d6fd8665698c227630564cff2f4f6aab3bc651161f4e2aadb9a47226c56d96",
+      "bytes": 31804
+    },
+    {
+      "path": "skills/story-long-scan/bridge/ciweimao_app/config.py",
+      "sha256": "ab48e24bf6a4c2949bbf547426a881718c4b98ba491c74fe9de44df071c956ff",
+      "bytes": 3809
+    },
+    {
+      "path": "skills/story-long-scan/bridge/ciweimao_app/content.py",
+      "sha256": "d4615afada420773dbd4068865412e624b75603e09d4712c9ceae607e872b290",
+      "bytes": 1767
+    },
+    {
+      "path": "skills/story-long-scan/bridge/ciweimao_app/crypto.py",
+      "sha256": "5c549ec9ee587eef7ed65bc08dad89e64c76117ac09c45debb48288b527b4e08",
+      "bytes": 1676
+    },
+    {
+      "path": "skills/story-long-scan/bridge/ciweimao_app/guest.py",
+      "sha256": "cb63f4b3387804ff21b6a88b49c6a24f2d7d63cd40f4ed8ae32958a0d05ade7d",
+      "bytes": 6021
+    },
+    {
+      "path": "skills/story-long-scan/bridge/ciweimao_app/models.py",
+      "sha256": "7ce3c511acbe389e5ae836849b14275ada1f09c5746c53ba2f9e0aeaf0d34bbe",
+      "bytes": 1352
+    },
+    {
+      "path": "skills/story-long-scan/bridge/ciweimao_app/protocol.py",
+      "sha256": "2da1bb7e30abf00c86b17fa98a87ca33d3e378a3ab03c45f3bbe91829ffea39b",
+      "bytes": 1119
+    },
+    {
+      "path": "skills/story-long-scan/bridge/ciweimao_app/requirements.txt",
+      "sha256": "613819d9a963e1e7137383267a2544031b2fb83354917b74628f17849e5451db",
+      "bytes": 49
+    },
+    {
+      "path": "skills/story-long-scan/bridge/ciweimao_app/web.py",
+      "sha256": "0bafa2ff9127481a5e885e785b1df196b25c7ceed7b7ac4077789423d7de9c63",
+      "bytes": 34419
     },
     {
       "path": "skills/story-long-scan/bridge/rankmin/__init__.py",
@@ -364,13 +414,18 @@
     },
     {
       "path": "skills/story-long-scan/bridge/rankmin/__main__.py",
-      "sha256": "278bcd78876ebede6e1b194282b7e7d7ea3625e31f7d225751655dc7f16579bc",
-      "bytes": 10182
+      "sha256": "a6af38fdb483af82be52d999e0f9492795cc2230e10f781b37cd1a7f2e8d62c7",
+      "bytes": 9983
     },
     {
       "path": "skills/story-long-scan/bridge/rankmin/ciweimao.py",
-      "sha256": "95e840eac33d0c9000dde7e98597bd475f9a116182651db24ca43a301acc609c",
-      "bytes": 15858
+      "sha256": "b04c5982c315d31693627f93ee8a992601c43571905210580530e8fdeb179488",
+      "bytes": 13411
+    },
+    {
+      "path": "skills/story-long-scan/bridge/rankmin/ciweimao_egress.py",
+      "sha256": "3f16b1dd7b1599e99e1ef18e2de0acb53c282407837add3d96d26a79c377ef7b",
+      "bytes": 5042
     },
     {
       "path": "skills/story-long-scan/bridge/rankmin/contracts.py",
@@ -414,8 +469,8 @@
     },
     {
       "path": "skills/story-long-scan/references/platform-ciweimao.md",
-      "sha256": "edb61aa5396347a11e914e1e80368217c7a623958c8b27416ee80e555dff085a",
-      "bytes": 969
+      "sha256": "1473a34e5a033474df162909be0ea2f888e99fbd736abf19f7e0fde88ffcced0",
+      "bytes": 1040
     },
     {
       "path": "skills/story-long-scan/references/platform-fanqie.md",

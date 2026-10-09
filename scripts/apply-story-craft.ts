@@ -175,8 +175,9 @@ const replacements: readonly Replacement[] = [
   },
   {
     path: "skills/story-long-scan/references/platform-ciweimao.md",
-    to: "作者选了刺猬猫才读本文。采集只走本技能 `bridge/rankmin_cli.py` 的 App 排行。不要启动 CDP，不要注册游客，不要下章节。缺账号、login_token 或 device_token 时命令失败并指出缺的环境变量。",
+    to: "作者选了刺猬猫才读本文。采集走本技能 `bridge/ciweimao_app` 的 App 协议客户端，经 `bridge/rankmin_cli.py` 写榜。不要启动 CDP，不要下章节。没有账号环境变量时客户端自己注册游客。出口用 `CIWEIMAO_PROXY_URL`，或 `~/.dsh/ciweimao/` 里的快代理密钥。",
     from: [
+      "作者选了刺猬猫才读本文。采集只走本技能 `bridge/rankmin_cli.py` 的 App 排行。不要启动 CDP，不要注册游客，不要下章节。缺账号、login_token 或 device_token 时命令失败并指出缺的环境变量。",
       "作者选了刺猬猫才读本文。本版本没有刺猬猫 provider。不要启动 CDP，也不要把下文命令改回采集脚本。作者没有提供榜单时，结论不含刺猬猫。分析维度只作历史对照。",
       "作者选了刺猬猫才读本文。需先用 `/browser-cdp` 启动 Chrome。rank-index 单页展示全部榜单，脚本按文本解析，按书名归一回填作品页链接，带连通性自检与空结果重试。"
     ]
@@ -299,6 +300,9 @@ async function copyRankBridge(): Promise<void> {
   await mkdir(dirname(cliTarget), { recursive: true });
   await cp(join(rankBridgeRoot, "rankmin"), packageTarget, { recursive: true });
   await copyFile(join(rankBridgeRoot, "rankmin_cli.py"), cliTarget);
+  const clientTarget = join(ohStoryRoot, "skills/story-long-scan/bridge/ciweimao_app");
+  await rm(clientTarget, { recursive: true, force: true });
+  await cp(join(rankBridgeRoot, "ciweimao_app"), clientTarget, { recursive: true });
 }
 
 async function spliceLongScanPhase2(): Promise<void> {

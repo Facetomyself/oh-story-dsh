@@ -1,6 +1,6 @@
 # 刺猬猫：采集与分析
 
-作者选了刺猬猫才读本文。采集只走本技能 `bridge/rankmin_cli.py` 的 App 排行。不要启动 CDP，不要注册游客，不要下章节。缺账号、login_token 或 device_token 时命令失败并指出缺的环境变量。
+作者选了刺猬猫才读本文。采集走本技能 `bridge/ciweimao_app` 的 App 协议客户端，经 `bridge/rankmin_cli.py` 写榜。不要启动 CDP，不要下章节。没有账号环境变量时客户端自己注册游客。出口用 `CIWEIMAO_PROXY_URL`，或 `~/.dsh/ciweimao/` 里的快代理密钥。
 
 ## 榜单与命令
 
