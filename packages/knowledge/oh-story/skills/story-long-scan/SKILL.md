@@ -43,36 +43,39 @@ metadata: {"openclaw":{"source":"https://github.com/zenstory-ai/oh-story-claudec
 
 ### Phase 2：确定数据来源
 
-**扫榜需要真实数据支撑。** 根据当前环境选择数据来源：
+**扫榜需要真实数据支撑。** 起点和番茄只跑本技能目录里的 `bridge/rankmin_cli.py`。它是匿名 HTTP，不带 Cookie，不进详情页，也不保存原始 HTML。七猫、晋江、刺猬猫本版本没有 provider。
 
 | 优先级 | 模式 | 说明 | 何时用 |
 |--------|------|------|--------|
-| 1 | **脚本采集** | 直接抓取平台页面/SSR 数据，产出结构化文件 | 优先；起点默认不需要 Chrome |
-| 2 | **用户提供** | 用户粘贴榜单截图/文字/链接 | 用户已有数据时 |
-| 3 | **内置知识** | 基于知识库趋势数据做分析 | 无法联网、用户无数据时 |
+| 1 | **rankmin** | 起点移动榜、番茄榜单页，写出榜单 markdown | 选了起点或番茄 |
+| 2 | **用户提供** | 用户粘贴榜单截图/文字 | 用户已有数据，或平台没有 provider |
+| 3 | **内置知识** | 基于知识库趋势数据做分析 | 命令失败且用户无数据时 |
 
-#### 脚本采集模式
+#### 起点和番茄
 
-1. 只读所选平台那一份：[起点](references/platform-qidian.md) / [番茄](references/platform-fanqie.md) / [七猫](references/platform-qimao.md) / [晋江](references/platform-jjwxc.md) / [刺猬猫](references/platform-ciweimao.md)。里面有榜单网址、命令、字段、默认组合、故障排查和该平台的分析维度；需要浏览器态的平台先 `/browser-cdp` 启动 Chrome。
-2. 每次扫榜新建输出目录 `扫榜/{YYYYMMDD}/`（同日再扫加 `-2`），存本次榜单，不往旧目录追加（聚合会混进旧榜）；文件名 `{平台}{榜单}_{YYYYMMDD}.md`。脚本已做清洗和质量标注。
-3. 聚合：`node scripts/aggregate-rank.js {输出目录} --out {输出目录}/扫榜聚合.md`（小平台加 `--sparse 10`）。**主会话只读这份聚合**，不整份读原始榜单：题材分布、本数占比、热度与字数中位、标签热词、书名常见词、多榜重合、每题材前 3 本代表作。
-4. 看聚合的「采集情况」：标了问题（书名没解出来、没采到、只有书单）的榜单按平台参考排查重采；重采不了就在报告里说明结论不含它。同方向不到 15 本（小平台 10 本）标「少」，等同 `[数据稀疏]`。
-5. 要看原始条目（开篇卖点、新人设、新桥段）时按需抽样：`node scripts/aggregate-rank.js {输出目录} --sample {题材/标签/书名词} --n 5`，一次一个方向。
+1. 平台参考只读分析维度和字段：[起点](references/platform-qidian.md) / [番茄](references/platform-fanqie.md)。不要执行参考里的旧命令，不要启动 CDP。
+2. 每次扫榜新建输出目录 `扫榜/{YYYYMMDD}/`（同日再扫加 `-2`）。在本技能目录执行：`python3 bridge/rankmin_cli.py --out {输出目录} --limit 20 --qidian yuepiao,hotsales,readindex`。番茄再加 `--fanqie male-hot-xifangqihuan,male-newbook-xifangqihuan,female-hot-gufengshiqing,female-newbook-gufengshiqing`。作者点名的榜或题材换成对应别名，不要一次扫完全部题材。
+3. 成功时写出 `起点{榜}_{日期}.md` 和 `番茄{榜}_{日期}.md`。主会话读这些文件。本包没有聚合脚本，不要运行 `scripts/` 下的采集或聚合命令。
+4. 退出码 2、缺模块或请求失败：该榜这次没拿到。不要编造名次，不要改走 CDP，也不要去作品页或章节页补标题。番茄若报私用区字段，报告里写明缺的是哪个字段。
+5. 同方向不到 15 本标「少」，等同 `[数据稀疏]`。要看某一条的简介，直接打开对应 markdown，一次一个方向。
+
+#### 七猫、晋江、刺猬猫
+
+本版本没有 provider。不要启动 CDP，也不要把 [七猫](references/platform-qimao.md) / [晋江](references/platform-jjwxc.md) / [刺猬猫](references/platform-ciweimao.md) 里的旧命令改回去跑。作者没提供榜单时，结论不含这些平台。分析维度只作历史对照。
 
 #### 其他数据来源
 
-**用户提供：** 已有扫描结果文件 → 直接聚合；链接 → 用 WebFetch 抓取；粘贴/截图 → 整理成 `# {平台} · {榜单名}` 标题、每本一段 `### #{排名} {书名}` 加一行 `*作者 · 题材 · 连载中 · 120万字 · 3.5万收藏*`（热度写「数字+口径」；有标签再加 `**标签：** a、b`）存进输出目录，再同样聚合。
+**用户提供：** 粘贴或截图整理成 `# {平台} · {榜单名}` 标题、每本一段 `### #{排名} {书名}` 加一行 `*作者 · 题材 · 连载中 · 120万字 · 3.5万收藏*`，存进本次输出目录。不要为了整理去抓站。
 
 **内置知识：** 加载 `references/genre-trends.md`，明确标注「以下分析基于历史趋势数据；未完成实时榜单校验前只能作为候选假设。」并列出需要复扫的榜单。
 
----
 
 ### Phase 3：数据分析
 
-以聚合结果为主，按所选平台参考里的「分析维度」看，再提取通用维度：
+以本次输出目录里的榜单 markdown 为主，按所选平台参考里的「分析维度」看，再提取通用维度：
 
 1. **题材分布**：题材表的本数、占比与热度中位
-2. **新题材信号**：新书榜列、多榜重合；`扫榜/` 下上一次的日期目录里有 `扫榜聚合.md` 就对比
+2. **新题材信号**：新书榜列、多榜重合；`扫榜/` 下上一次的日期目录里有榜单 markdown 就对比
 3. **经典题材变化**：老牌题材的走势（上升/稳定/下降），没有上期数据就只写现状
 4. **字数**：字数分布与各题材字数中位
 5. **书名模式**：书名常见词 + 代表作书名
@@ -131,7 +134,7 @@ metadata: {"openclaw":{"source":"https://github.com/zenstory-ai/oh-story-claudec
 
 把扫榜结果变成能直接用的选题建议，产出 `选题决策.md`。完整方法（选题四步 + 可行性判断 + 输出模板）见 [references/topic-decision.md](references/topic-decision.md)。
 
-**从文件接上：** 先读 `{outdir}/选题决策.md` 的「扫榜结论」和 `扫榜聚合.md`，不靠对话记忆；两者都没有就回 Phase 2。
+**从文件接上：** 先读 `{outdir}/选题决策.md` 的「扫榜结论」和本次榜单 markdown，不靠对话记忆；两者都没有就回 Phase 2。
 
 **如信息不足，向用户补齐项目条件：**「目标平台、已有素材、擅长题材/写作约束、计划篇幅是什么？」
 
@@ -176,14 +179,8 @@ metadata: {"openclaw":{"source":"https://github.com/zenstory-ai/oh-story-claudec
 | [references/reader-profiling.md](references/reader-profiling.md) | 需要分析目标读者画像时 |
 | [references/genre-trends.md](references/genre-trends.md) | 查看题材趋势候选、切入约束和样本校验规则时 |
 | [references/publishing-guide.md](references/publishing-guide.md) | 平台适配+推荐机制校验+数据指标+简介设计 |
-| 五份平台参考（链接见「脚本采集模式」第 1 步） | 「确定数据来源」：只读所选平台那份——榜单网址、命令、字段、故障排查、平台分析维度 |
-| [scripts/aggregate-rank.js](scripts/aggregate-rank.js) | 把输出目录里的原始榜单聚合成短表（`--out` 落盘，`--sample` 抽原始条目，`--json` 机读），主会话只读它 |
-| [scripts/cdp-utils.js](scripts/cdp-utils.js) | CDP 公共工具函数（ab/sleep/evalJSON/safeStr/scrollLoad/getArg），各采集脚本共用 |
-| [scripts/fanqie-rank-scraper.js](scripts/fanqie-rank-scraper.js) | 番茄榜单采集，用法见番茄参考 |
-| [scripts/qidian-rank-scraper.js](scripts/qidian-rank-scraper.js) | 起点榜单采集，用法见起点参考 |
-| [scripts/qimao-rank-scraper.js](scripts/qimao-rank-scraper.js) | 七猫榜单采集，用法见七猫参考 |
-| [scripts/jjwxc-rank-scraper.js](scripts/jjwxc-rank-scraper.js) | 晋江榜单采集，用法见晋江参考 |
-| [scripts/ciweimao-rank-scraper.js](scripts/ciweimao-rank-scraper.js) | 刺猬猫榜单采集，用法见刺猬猫参考 |
+| 五份平台参考（链接见 Phase 2） | 起点、番茄读「分析维度」和字段；七猫、晋江、刺猬猫本版本没有 provider，不执行其中的采集命令 |
+| [bridge/rankmin_cli.py](bridge/rankmin_cli.py) | 起点移动榜和番茄榜单页。`--self-test` 不联网。失败退出码 2，不编造榜单 |
 
 ---
 

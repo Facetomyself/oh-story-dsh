@@ -1,10 +1,10 @@
 # 起点：采集与分析
 
-作者选了起点才读本文。默认不需要 Chrome：脚本先读 `https://m.qidian.com` 移动端 SSR pageContext，移动端不可用时才回退 CDP/PC 页面，文件头 `抓取方式` 标 `mobile-ssr` 或 `cdp-pc`。
+作者选了起点才读本文。采集只走本技能 `bridge/rankmin_cli.py` 的起点移动榜。不要执行下文旧命令，不要回退 CDP，不要进详情页。
 
 ## 榜单与命令
 
-`node scripts/qidian-rank-scraper.js --type {榜单} --outdir {输出目录}`（`--type all` 全采；`--mode mobile|cdp` 强制一种方式；`--detail yes` 进详情页补标签、简介、最新更新）
+在技能目录执行 `python3 bridge/rankmin_cli.py --out {输出目录} --limit 20 --qidian {榜单别名}`。别名用下表的 `--type` 列。不要全采，不要进详情页，不要 CDP。
 
 | 榜单 | --type | URL | 看什么 |
 |------|--------|-----|--------|

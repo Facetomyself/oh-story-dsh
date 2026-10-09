@@ -354,8 +354,53 @@
     },
     {
       "path": "skills/story-long-scan/SKILL.md",
-      "sha256": "88d46967faba05f4f8e6e45a9734d12c6053ea7b0f777319d8766cb1e3a5e19f",
-      "bytes": 10901
+      "sha256": "9ba09869b7b777b9bfda4c9766491f910901a04b90c71c7a8cb2c2a5317549d1",
+      "bytes": 10225
+    },
+    {
+      "path": "skills/story-long-scan/bridge/rankmin/__init__.py",
+      "sha256": "c4f2b0f7fd7802a0a9600d5381b171e5924ec431cb128be03d15d5546f664e6a",
+      "bytes": 190
+    },
+    {
+      "path": "skills/story-long-scan/bridge/rankmin/__main__.py",
+      "sha256": "c1175a3fb7288515b10679ade4bd658b635330b27627324509d925db16297eec",
+      "bytes": 6295
+    },
+    {
+      "path": "skills/story-long-scan/bridge/rankmin/contracts.py",
+      "sha256": "b053248bba373560b5b849b40c0a150d4c47d02361ec0aa0b7026b505cbb1bd9",
+      "bytes": 2148
+    },
+    {
+      "path": "skills/story-long-scan/bridge/rankmin/fanqie.py",
+      "sha256": "510b896145193b9b0e4a017edc6c08671bbc9305d4485dff4ebbbe84f9dcb253",
+      "bytes": 13939
+    },
+    {
+      "path": "skills/story-long-scan/bridge/rankmin/http_client.py",
+      "sha256": "0bf5362f30bbd7d2ca8063f93555eed50661e3bc5e22d2788ead2b9184ec83c1",
+      "bytes": 3566
+    },
+    {
+      "path": "skills/story-long-scan/bridge/rankmin/markdown_out.py",
+      "sha256": "8d8e3eb2980a85f86b683c90b60aae7eb2cab979371698e7c051689c7a5b2362",
+      "bytes": 3305
+    },
+    {
+      "path": "skills/story-long-scan/bridge/rankmin/qidian.py",
+      "sha256": "d78a4d6a349fc8e2fb120e531acbdc5e2153d8d190c9a25752224c3ebcbb430c",
+      "bytes": 9679
+    },
+    {
+      "path": "skills/story-long-scan/bridge/rankmin/textutil.py",
+      "sha256": "6b921d41e8ef877e76b3a299f0636d7ad0e9255efaeb2f6c3fcd1ab6ba8f3b85",
+      "bytes": 1290
+    },
+    {
+      "path": "skills/story-long-scan/bridge/rankmin_cli.py",
+      "sha256": "13b212032f4c27685b7e3ee536a8e184dcc7ec1a09099aca01230dfb6b7f2d1d",
+      "bytes": 446
     },
     {
       "path": "skills/story-long-scan/references/genre-trends.md",
@@ -364,28 +409,28 @@
     },
     {
       "path": "skills/story-long-scan/references/platform-ciweimao.md",
-      "sha256": "fb6e75739e369d76928db627fb3efb55fea41766a8038c551855a73a997a904e",
-      "bytes": 1002
+      "sha256": "f06a53c48a6214f962eccb7f9c8c4f2b254bd67ce01bd839ed830b5cbd61af79",
+      "bytes": 882
     },
     {
       "path": "skills/story-long-scan/references/platform-fanqie.md",
-      "sha256": "70c1aea21d8c04f3f44a07202cd1c04a33ff90f1a6030ed2012590e4398cfa3a",
-      "bytes": 4156
+      "sha256": "c5d076d5424afd0072b562bf6ab37759554d9bd965c7f7132891fe82c6232189",
+      "bytes": 3088
     },
     {
       "path": "skills/story-long-scan/references/platform-jjwxc.md",
-      "sha256": "6e0261dd37f22bc2ced3d88b358ad9bbf311d5c09ffca3112b7701396ba085a9",
-      "bytes": 1660
+      "sha256": "687920c2591006af5af902b36da7b35ce0ca420db1951c3909c0ca0f722cfd2b",
+      "bytes": 1114
     },
     {
       "path": "skills/story-long-scan/references/platform-qidian.md",
-      "sha256": "9b27932c83514f2e922d47aa1a8a2535c69817f3f73426bc520ce879fe745a54",
-      "bytes": 2212
+      "sha256": "ac59c69812766a320e32e6aa35a3e55fab8f1a1cfda97f9f24ad60c5c5f157c4",
+      "bytes": 2145
     },
     {
       "path": "skills/story-long-scan/references/platform-qimao.md",
-      "sha256": "59ad08d1564c0f3436b1864e4a300fa64c22056575d8d9fb3efb9a2667df480a",
-      "bytes": 1325
+      "sha256": "8e70e9981826b2c4702a3fb2740b4d559b7f6f0d9d2f420c3110d02736c5f0b4",
+      "bytes": 1213
     },
     {
       "path": "skills/story-long-scan/references/publishing-guide.md",
@@ -1569,8 +1614,8 @@
     },
     {
       "path": "skills/story-short-scan/SKILL.md",
-      "sha256": "0c8314c6c62b9dfcbd9053debcc4513de48c895c73eb2e20a99903d24eccfa91",
-      "bytes": 9199
+      "sha256": "eadac541b5f635e6b7994bd866b021bf498092efcc0a1f761e0a6dc8b1e9fd9e",
+      "bytes": 9291
     },
     {
       "path": "skills/story-short-scan/references/manual-rank-input.md",

@@ -1,15 +1,12 @@
 # 七猫：采集与分析
 
-作者选了七猫才读本文。需先用 `/browser-cdp` 启动 Chrome；页面无明显反爬，脚本滚动加载，男生榜/女生榜 tab 切换（失败重试）。
+作者选了七猫才读本文。本版本没有七猫 provider。不要启动 CDP，也不要把下文命令改回采集脚本。作者没有提供榜单时，结论不含七猫。分析维度只作历史对照。
 
 ## 榜单与命令
 
 入口 qimao.com/paihang：大热榜（日榜/月榜）、新书榜、完结榜、收藏榜、更新榜。
 
-```bash
-node scripts/qimao-rank-scraper.js --channel male --type hot --period day --outdir {输出目录}   # 男生大热榜日榜
-node scripts/qimao-rank-scraper.js --channel all --type all --outdir {输出目录}                 # 全部
-```
+本版本不执行采集命令。入口 qimao.com/paihang 只说明榜单曾经在哪。
 
 大热榜用 `--period day|month|all` 选日榜、月榜或两者（默认 day），周期进文件头与文件名；其他榜不分周期。默认组合：男频大热榜日榜 + 女频大热榜日榜。
 

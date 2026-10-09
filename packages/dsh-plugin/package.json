@@ -1,6 +1,6 @@
 {
   "name": "@oh-story/dsh",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "description": "A DSH plugin for fiction, short-drama, interactive-game, and video-recap production",
   "keywords": [
     "deepseek-harness",

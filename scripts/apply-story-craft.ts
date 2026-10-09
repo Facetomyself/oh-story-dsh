@@ -1,9 +1,10 @@
-import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { copyFile, cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { ohStoryRoot, refreshBundledManifest } from "./knowledge-assets.js";
 
 const overlayRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../overlays/story-craft");
+const rankBridgeRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../overlays/rank-bridge");
 
 const copies = [
   ["scene-grammar.md", "skills/story-long-write/references/scene-grammar.md"],
@@ -106,6 +107,119 @@ const replacements: readonly Replacement[] = [
       "字段不完整时先补齐；无法从材料确定的关系或副线写 `[待补充]`，不得杜撰。新写或补建的细纲，材料够时在可选块写下场面四行；不够就写 `[待补充]`，检查器不因此失败。",
       "字段不完整时先补齐；无法从材料确定的关系或副线写 `[待补充]`，不得杜撰。"
     ]
+  },
+  {
+    path: "skills/story-long-scan/SKILL.md",
+    to: "以本次输出目录里的榜单 markdown 为主，按所选平台参考里的「分析维度」看，再提取通用维度：",
+    from: ["以聚合结果为主，按所选平台参考里的「分析维度」看，再提取通用维度："]
+  },
+  {
+    path: "skills/story-long-scan/SKILL.md",
+    to: "2. **新题材信号**：新书榜列、多榜重合；`扫榜/` 下上一次的日期目录里有榜单 markdown 就对比",
+    from: ["2. **新题材信号**：新书榜列、多榜重合；`扫榜/` 下上一次的日期目录里有 `扫榜聚合.md` 就对比"]
+  },
+  {
+    path: "skills/story-long-scan/SKILL.md",
+    to: "**从文件接上：** 先读 `{outdir}/选题决策.md` 的「扫榜结论」和本次榜单 markdown，不靠对话记忆；两者都没有就回 Phase 2。",
+    from: ["**从文件接上：** 先读 `{outdir}/选题决策.md` 的「扫榜结论」和 `扫榜聚合.md`，不靠对话记忆；两者都没有就回 Phase 2。"]
+  },
+  {
+    path: "skills/story-long-scan/SKILL.md",
+    to: `| 五份平台参考（链接见 Phase 2） | 起点、番茄读「分析维度」和字段；七猫、晋江、刺猬猫本版本没有 provider，不执行其中的采集命令 |
+| [bridge/rankmin_cli.py](bridge/rankmin_cli.py) | 起点移动榜和番茄榜单页。\`--self-test\` 不联网。失败退出码 2，不编造榜单 |`,
+    from: [`| 五份平台参考（链接见「脚本采集模式」第 1 步） | 「确定数据来源」：只读所选平台那份——榜单网址、命令、字段、故障排查、平台分析维度 |
+| [scripts/aggregate-rank.js](scripts/aggregate-rank.js) | 把输出目录里的原始榜单聚合成短表（\`--out\` 落盘，\`--sample\` 抽原始条目，\`--json\` 机读），主会话只读它 |
+| [scripts/cdp-utils.js](scripts/cdp-utils.js) | CDP 公共工具函数（ab/sleep/evalJSON/safeStr/scrollLoad/getArg），各采集脚本共用 |
+| [scripts/fanqie-rank-scraper.js](scripts/fanqie-rank-scraper.js) | 番茄榜单采集，用法见番茄参考 |
+| [scripts/qidian-rank-scraper.js](scripts/qidian-rank-scraper.js) | 起点榜单采集，用法见起点参考 |
+| [scripts/qimao-rank-scraper.js](scripts/qimao-rank-scraper.js) | 七猫榜单采集，用法见七猫参考 |
+| [scripts/jjwxc-rank-scraper.js](scripts/jjwxc-rank-scraper.js) | 晋江榜单采集，用法见晋江参考 |
+| [scripts/ciweimao-rank-scraper.js](scripts/ciweimao-rank-scraper.js) | 刺猬猫榜单采集，用法见刺猬猫参考 |`]
+  },
+  {
+    path: "skills/story-long-scan/references/platform-qidian.md",
+    to: "作者选了起点才读本文。采集只走本技能 `bridge/rankmin_cli.py` 的起点移动榜。不要执行下文旧命令，不要回退 CDP，不要进详情页。",
+    from: ["作者选了起点才读本文。默认不需要 Chrome：脚本先读 `https://m.qidian.com` 移动端 SSR pageContext，移动端不可用时才回退 CDP/PC 页面，文件头 `抓取方式` 标 `mobile-ssr` 或 `cdp-pc`。"]
+  },
+  {
+    path: "skills/story-long-scan/references/platform-qidian.md",
+    to: "在技能目录执行 `python3 bridge/rankmin_cli.py --out {输出目录} --limit 20 --qidian {榜单别名}`。别名用下表的 `--type` 列。不要全采，不要进详情页，不要 CDP。",
+    from: ["`node scripts/qidian-rank-scraper.js --type {榜单} --outdir {输出目录}`（`--type all` 全采；`--mode mobile|cdp` 强制一种方式；`--detail yes` 进详情页补标签、简介、最新更新）"]
+  },
+  {
+    path: "skills/story-long-scan/references/platform-fanqie.md",
+    to: "作者选了番茄才读本文。采集只走本技能 `bridge/rankmin_cli.py` 的榜单页。书名若仍是私用区字符，命令失败并指出缺的字段。不要启动 CDP，不要进详情页或章节页补标题。",
+    from: ["作者选了番茄才读本文。番茄列表页有字体反爬，须先用 `/browser-cdp` 启动 Chrome，再由脚本从详情页（内嵌 JSON `bookName`/`author`/`abstract`/`categoryV2` + `<title>` + og:meta）多策略解码书名、作者、题材、标签、简介。"]
+  },
+  {
+    path: "skills/story-long-scan/references/platform-fanqie.md",
+    to: "```bash\npython3 bridge/rankmin_cli.py --out {输出目录} --limit 20 --fanqie male-hot-xifangqihuan,female-hot-gufengshiqing\n```\n\n别名示例：`male-hot-xifangqihuan`、`female-newbook-gufengshiqing`、`1_2_1141`。不要一次扫完全部题材。",
+    from: ["```bash\nnode scripts/fanqie-rank-scraper.js --channel 1 --type 2 --outdir {输出目录}     # 男频阅读榜（默认）\nnode scripts/fanqie-rank-scraper.js --channel all --top 15 --outdir {输出目录}   # 男女频，每题材前 15 本\n```"]
+  },
+  {
+    path: "skills/story-long-scan/references/platform-fanqie.md",
+    to: "书库「最热」不在本版本的 provider 里。不要抓 library 页，也不要进详情页补标题。",
+    from: ["```bash\nnode scripts/fanqie-rank-scraper.js --source library --channel all --outdir {输出目录}            # 男、女各一份：连载中、30 万字以下、前 3 页\nnode scripts/fanqie-rank-scraper.js --source library --channel mix --pages 5 --outdir {输出目录}  # 不分男女\n```"]
+  },
+  {
+    path: "skills/story-long-scan/references/platform-qimao.md",
+    to: "作者选了七猫才读本文。本版本没有七猫 provider。不要启动 CDP，也不要把下文命令改回采集脚本。作者没有提供榜单时，结论不含七猫。分析维度只作历史对照。",
+    from: ["作者选了七猫才读本文。需先用 `/browser-cdp` 启动 Chrome；页面无明显反爬，脚本滚动加载，男生榜/女生榜 tab 切换（失败重试）。"]
+  },
+  {
+    path: "skills/story-long-scan/references/platform-jjwxc.md",
+    to: "作者选了晋江才读本文。本版本没有晋江 provider。不要启动 CDP，也不要把下文命令改回采集脚本。作者没有提供榜单时，结论不含晋江。分析维度只作历史对照。",
+    from: ["作者选了晋江才读本文。需先用 `/browser-cdp` 启动 Chrome。脚本两步走：① 列表页 `topten.php` 取频道分组与书名/作者，从书名链接取 `novelid`（排除「X 向《书名》投了 Y」霸王票记录）；② 进 `onebook.php?novelid=` 详情页补采核心指标。晋江是 gb18030 编码，脚本已按此解码；详情指标公开，无需登录。"]
+  },
+  {
+    path: "skills/story-long-scan/references/platform-ciweimao.md",
+    to: "作者选了刺猬猫才读本文。本版本没有刺猬猫 provider。不要启动 CDP，也不要把下文命令改回采集脚本。作者没有提供榜单时，结论不含刺猬猫。分析维度只作历史对照。",
+    from: ["作者选了刺猬猫才读本文。需先用 `/browser-cdp` 启动 Chrome。rank-index 单页展示全部榜单，脚本按文本解析，按书名归一回填作品页链接，带连通性自检与空结果重试。"]
+  },
+  {
+    path: "skills/story-long-scan/references/platform-qimao.md",
+    to: "本版本不执行采集命令。入口 qimao.com/paihang 只说明榜单曾经在哪。",
+    from: ["```bash\nnode scripts/qimao-rank-scraper.js --channel male --type hot --period day --outdir {输出目录}   # 男生大热榜日榜\nnode scripts/qimao-rank-scraper.js --channel all --type all --outdir {输出目录}                 # 全部\n```"]
+  },
+  {
+    path: "skills/story-long-scan/references/platform-jjwxc.md",
+    to: "本版本不执行采集命令。上面的 URL 只说明榜单曾经在哪。",
+    from: ["```bash\nnode scripts/jjwxc-rank-scraper.js --type 12 --outdir {输出目录}        # 列表+详情（默认每频道前 10，详情上限 100）\nnode scripts/jjwxc-rank-scraper.js --type 12 --top 15 --detail-limit 60  # 调整每频道本数/详情总量\nnode scripts/jjwxc-rank-scraper.js --type 12 --list-only                 # 只采列表（快，无核心指标）\n```"]
+  },
+  {
+    path: "skills/story-long-scan/references/platform-ciweimao.md",
+    to: "本版本不执行采集命令。click / favor / recommend / subscribe / monthly / tsukkomi / newbook / blade 只说明榜曾经怎么分。",
+    from: ["`node scripts/ciweimao-rank-scraper.js --type {榜单} --outdir {输出目录}`：click 点击榜 / favor 收藏榜 / recommend 推荐榜 / subscribe 订阅榜 / monthly 月票榜 / tsukkomi 吐槽榜 / newbook 新书榜 / blade 刀片榜 / all 全部（默认）。"]
+  },
+  {
+    path: "skills/story-long-scan/references/platform-fanqie.md",
+    to: "不要逐题材扫完全部，也不要进详情页。文件名是 `番茄{榜}_{YYYYMMDD}.md`。",
+    from: ["脚本逐题材采集（每题材上限约 20，`--top N` 可调），每 5 本一批请求详情页。默认组合：男频阅读榜全题材 + 女频阅读榜全题材；要看新风向再加新书榜（`--type 1`）或下面的书库「最热」。文件名 `番茄{频道}{榜单}_全题材_{YYYYMMDD}.md`。一份全题材就是七百来条，只读聚合结果，不整份读原始文件。"]
+  },
+  {
+    path: "skills/story-long-scan/references/platform-fanqie.md",
+    to: "书库筛选不在本版本里。缺标题就停，不要按页面顺序补 bookId，也不要进详情页解码。",
+    from: ["`--stat 1|0|any`、`--count 0-4|any` 改筛选。默认组合（连载中、30 万字以下）是**正在起量的新书**：阅读榜被老书占住时，看它才知道新书里什么题材在冒头，文件名与列表名带「新书」，聚合时算进「新书榜」列。列表页书名和数字都被字体反爬，脚本只按页面顺序取 bookId，书名、题材、在读、字数都由详情页解码。"]
+  },
+  {
+    path: "skills/story-long-scan/references/platform-fanqie.md",
+    to: "命令退出码 2 且指出私用区字段时，这次榜单作废。不要打开作品页，不要启动 Chrome，也不要重采详情。",
+    from: ["文件头 `数据质量` 标 `[标题解析异常]`（书名多为 `（标题待解析）`）：多为详情页结构变动或被登录/验证页拦截。在已登录的 Chrome 里手动打开任一 `https://fanqienovel.com/page/{bookId}`，确认页面正常、不是验证页；控制台报 `CDP 无响应` 就按 browser-cdp 重新启动 Chrome。确认正常后重采。"]
+  },
+  {
+    path: "skills/story-long-scan/references/platform-jjwxc.md",
+    to: "作者自己提供的晋江样本如果没有收藏、营养液或积分、字数，标成数据不够，不要为此去抓详情页。",
+    from: ["必须有详情页核心指标（收藏、营养液或积分、字数）：用了 `--list-only` 或文件头标 `[仅列表-无核心指标]` 的数据撑不起下面的分析，视为不合格，要重采。"]
+  },
+  {
+    path: "skills/story-long-scan/references/platform-fanqie.md",
+    to: "书名解不开时命令不会写出这份榜，不要把占位标题当成样本。",
+    from: ["解码失败的书名显示 `（标题待解析）`，bookId 与链接保留供回查。"]
+  },
+  {
+    path: "skills/story-short-scan/SKILL.md",
+    to: "**核心信念：短篇市场变化快，题材信号有效期短。** 扫榜报告必须标注样本日期、趋势可信度和下次重新扫榜的时间。长篇起点和番茄不在这里采集，走 story-long-scan 的 `bridge/rankmin_cli.py`。",
+    from: ["**核心信念：短篇市场变化快，题材信号有效期短。** 扫榜报告必须标注样本日期、趋势可信度和下次重新扫榜的时间。"]
   }
 ];
 
@@ -162,6 +276,31 @@ async function syncCraftSections(): Promise<void> {
   if (next !== text) await writeFile(target, next);
 }
 
+async function copyRankBridge(): Promise<void> {
+  const packageTarget = join(ohStoryRoot, "skills/story-long-scan/bridge/rankmin");
+  const cliTarget = join(ohStoryRoot, "skills/story-long-scan/bridge/rankmin_cli.py");
+  await rm(packageTarget, { recursive: true, force: true });
+  await mkdir(dirname(cliTarget), { recursive: true });
+  await cp(join(rankBridgeRoot, "rankmin"), packageTarget, { recursive: true });
+  await copyFile(join(rankBridgeRoot, "rankmin_cli.py"), cliTarget);
+}
+
+async function spliceLongScanPhase2(): Promise<void> {
+  const body = await readFile(join(rankBridgeRoot, "long-scan-phase2.md"), "utf8");
+  const normalized = body.endsWith("\n") ? body : `${body}\n`;
+  const target = join(ohStoryRoot, "skills/story-long-scan/SKILL.md");
+  const text = await readFile(target, "utf8");
+  const start = "### Phase 2：确定数据来源";
+  const end = "### Phase 3：数据分析";
+  const startAt = text.indexOf(start);
+  const endAt = text.indexOf(end);
+  if (startAt < 0 || endAt < 0 || endAt <= startAt) {
+    throw new Error("story-long-scan Phase 2 anchors missing");
+  }
+  const next = `${text.slice(0, startAt)}${normalized}\n${text.slice(endAt)}`;
+  if (next !== text) await writeFile(target, next);
+}
+
 export async function applyStoryCraft(): Promise<void> {
   for (const relativePath of removedAfterSync) {
     await rm(join(ohStoryRoot, relativePath), { force: true });
@@ -171,7 +310,9 @@ export async function applyStoryCraft(): Promise<void> {
     await mkdir(dirname(target), { recursive: true });
     await copyFile(join(overlayRoot, sourceName), target);
   }
+  await copyRankBridge();
   for (const entry of replacements) await replaceOnce(entry);
+  await spliceLongScanPhase2();
   await syncCraftSections();
 }
 

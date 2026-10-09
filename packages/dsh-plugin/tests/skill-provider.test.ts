@@ -109,6 +109,9 @@ describe("Oh Story bundled skill provider", () => {
     // Oh Story 0.8.2: scan conclusions hand off to the writing Skills through files.
     const longScan = await provider.get(candidates.find((value) => value.name === "story-long-scan")!, {});
     expect(longScan?.content).toContain("选题决策.md");
+    expect(longScan?.content).toContain("bridge/rankmin_cli.py");
+    expect(longScan?.content).toContain("本版本没有 provider");
+    expect(longScan?.content).not.toContain("browser-cdp");
     expect((await provider.get(candidates.find((value) => value.name === "story-short-scan")!, {}))?.content).toContain("短篇扫榜结论.md");
     const shortScan = await provider.get(candidates.find((value) => value.name === "story-short-scan")!, {});
     expect(shortScan?.content).toContain("可信度：样本多少篇、来自哪几个榜");

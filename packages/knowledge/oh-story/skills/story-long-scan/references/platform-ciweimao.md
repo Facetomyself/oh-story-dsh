@@ -1,10 +1,10 @@
 # 刺猬猫：采集与分析
 
-作者选了刺猬猫才读本文。需先用 `/browser-cdp` 启动 Chrome。rank-index 单页展示全部榜单，脚本按文本解析，按书名归一回填作品页链接，带连通性自检与空结果重试。
+作者选了刺猬猫才读本文。本版本没有刺猬猫 provider。不要启动 CDP，也不要把下文命令改回采集脚本。作者没有提供榜单时，结论不含刺猬猫。分析维度只作历史对照。
 
 ## 榜单与命令
 
-`node scripts/ciweimao-rank-scraper.js --type {榜单} --outdir {输出目录}`：click 点击榜 / favor 收藏榜 / recommend 推荐榜 / subscribe 订阅榜 / monthly 月票榜 / tsukkomi 吐槽榜 / newbook 新书榜 / blade 刀片榜 / all 全部（默认）。
+本版本不执行采集命令。click / favor / recommend / subscribe / monthly / tsukkomi / newbook / blade 只说明榜曾经怎么分。
 
 ## 字段
 
