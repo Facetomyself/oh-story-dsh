@@ -1,6 +1,6 @@
 # 番茄：采集与分析
 
-作者选了番茄才读本文。采集走本技能 `bridge/fanqie_app` 的 App 分类榜，经 `bridge/rankmin_cli.py` 写榜。`hot` 是分类热门，`newbook` 是分类最新。不要启动 CDP，不要下章节，不要进网页榜补标题。
+作者选了番茄才读本文。采集走本技能 `bridge/fanqie_app` 的 App 分类榜，经 `bridge/rankmin_cli.py` 写榜。`hot` 是分类热门，`newbook` 是分类最新，`rising` 是该题材连载、30 万字以下、按热度的新书。没有跨题材书库列表。不要启动 CDP，不要下章节，不要抓 library 页，不要进网页榜补标题。
 
 ## 榜单与命令
 
@@ -10,7 +10,7 @@ URL `fanqienovel.com/rank/{channel}_{type}_{cat_id}`：channel 0=女频/1=男频
 python3 bridge/rankmin_cli.py --out {输出目录} --limit 20 --fanqie male-hot-xifangqihuan,female-hot-gufengshiqing
 ```
 
-别名示例：`male-hot-xifangqihuan`、`female-newbook-gufengshiqing`、`1_2_1141`。不要一次扫完全部题材。
+别名示例：`male-hot-xifangqihuan`、`female-newbook-gufengshiqing`、`male-rising-dushinaodong`、`female-rising-gufengshiqing`、`1_2_1141`。默认四个分类不要改成 rising。要看题材新书时，把 `male-rising-<题材>`,`female-rising-<题材>` 加在同一条 `--fanqie` 上。`rising` 只按题材取连载且 30 万字以下的热度。失败的榜不要打开网页榜、library 页或作品页去补。不要一次扫完全部题材。
 
 不要逐题材扫完全部，也不要进详情页。文件名是 `番茄{榜}_{YYYYMMDD}.md`。
 
@@ -20,9 +20,9 @@ python3 bridge/rankmin_cli.py --out {输出目录} --limit 20 --fanqie male-hot-
 
 URL `fanqienovel.com/library/{筛选}/page_{n}?sort=hottes`：筛选段 `audience1`=男生、`audience0`=女生（不写＝不分男女），`stat1`=连载中、`stat0`=已完结，`count0`=30 万字以下（`count1`-`count4` 依次 30-50 万、50-100 万、100-200 万、200 万以上），全不选时是 `all`。每页 18 本，按热度排。
 
-书库「最热」不在本版本的 provider 里。不要抓 library 页，也不要进详情页补标题。
+网页书库「最热」没有跨题材入口。同一筛选按题材走 `rising`，例如 `male-rising-dushinaodong`。不要抓 library 页，也不要进详情页补标题。
 
-书库筛选不在本版本里。缺标题就停，不要按页面顺序补 bookId，也不要进详情页解码。
+`rising` 已是连载、30 万字以下、按热度。不要再改网页筛选，缺标题就停，不要按页面顺序补 bookId，也不要进详情页解码。
 
 ## 字段
 
@@ -30,7 +30,7 @@ URL `fanqienovel.com/library/{筛选}/page_{n}?sort=hottes`：筛选段 `audienc
 
 ## 故障排查
 
-命令退出码 2 时这次榜单作废。不要打开作品页，不要启动 Chrome，也不要下章节。
+stdout 打出的路径就是这次拿到的榜，先读这些文件。任一榜失败则退出码 2，stderr 会点名失败的榜。不要打开网页榜、library 页或作品页去补，不要启动 Chrome，也不要下章节。
 
 ## 分析维度
 

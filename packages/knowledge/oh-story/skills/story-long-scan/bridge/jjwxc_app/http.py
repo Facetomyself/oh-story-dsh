@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 import gzip
 import random
+import re
 import ssl
 import time
 import uuid
@@ -21,6 +22,16 @@ from urllib.parse import parse_qsl, urlparse
 
 ANDROID_REFERER = "https://android.jjwxc.net/?v=502"
 ANDROID_VERSION_CODE = "502"
+BOOK_PAGE_HOST = "www.jjwxc.net"
+BOOK_PAGE_PATH = "/onebook.php"
+STATS_HOST = "my.jjwxc.net"
+STATS_PATH = "/lib/ajax.php"
+STATS_ACTION = "getNovelCollectedCount"
+STATS_CALLBACK = "jjwxcStats"
+WEB_USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    "AppleWebKit/537.36 Chrome/126 Safari/537.36"
+)
 DEFAULT_MIN_DELAY_SECONDS = 2.0
 DEFAULT_MAX_DELAY_SECONDS = 4.0
 DEFAULT_MAX_RETRIES = 2
@@ -154,14 +165,60 @@ class RateLimiter:
         self._last_request_at = self._clock()
 
 
-def _decode(body: bytes, content_encoding: str = "") -> str:
-    payload = body
+def _decompress(body: bytes, content_encoding: str = "") -> bytes:
     if "gzip" in content_encoding.lower() or body.startswith(b"\x1f\x8b"):
         try:
-            payload = gzip.decompress(body)
+            return gzip.decompress(body)
         except OSError:
-            payload = body
-    return payload.decode("utf-8", errors="replace")
+            return body
+    return body
+
+
+def _decode(body: bytes, content_encoding: str = "") -> str:
+    return _decompress(body, content_encoding).decode("utf-8", errors="replace")
+
+
+def _decode_public(body: bytes, content_encoding: str = "") -> str:
+    payload = _decompress(body, content_encoding)
+    match = re.search(br"charset\s*=\s*['\"]?([A-Za-z0-9_\-]+)", payload[:4096], re.I)
+    meta = match.group(1).decode("ascii", errors="ignore") if match else ""
+    seen: set[str] = set()
+    for candidate in (meta, "utf-8", "gb18030"):
+        name = candidate.lower().replace("_", "-")
+        if name in {"gb2312", "gbk", "gb-2312"}:
+            name = "gb18030"
+        if not name or name in seen:
+            continue
+        seen.add(name)
+        try:
+            return payload.decode(name)
+        except (LookupError, UnicodeDecodeError):
+            continue
+    return payload.decode("gb18030", errors="replace")
+
+
+def assert_public_book_request(url: str, headers: Mapping[str, object]) -> None:
+    """Reject anything except the two public book-page reads."""
+    _assert_no_forbidden_fields(headers)
+    parsed = urlparse(url)
+    pairs = parse_qsl(parsed.query, keep_blank_values=True)
+    _assert_no_forbidden_fields(dict(pairs))
+    keys = [key for key, _ in pairs]
+    values = dict(pairs)
+    novel_id = values.get("novelid", "")
+    if parsed.scheme != "https" or not novel_id.isdigit() or len(novel_id) > 12:
+        raise ValueError("jjwxc book page url")
+    if parsed.hostname == BOOK_PAGE_HOST and parsed.path == BOOK_PAGE_PATH:
+        if keys != ["novelid"]:
+            raise ValueError("jjwxc book page url")
+        return
+    if parsed.hostname == STATS_HOST and parsed.path == STATS_PATH:
+        if keys != ["action", "novelid", "callback"]:
+            raise ValueError("jjwxc book page url")
+        if values.get("action") != STATS_ACTION or values.get("callback") != STATS_CALLBACK:
+            raise ValueError("jjwxc book page url")
+        return
+    raise ValueError("jjwxc book page url")
 
 
 class JjwxcHttpClient:
@@ -222,3 +279,56 @@ class JjwxcHttpClient:
         if last_status:
             raise JjwxcRankError(f"jjwxc rank http status {last_status}")
         raise JjwxcRankError("jjwxc rank request failed")
+
+    def fetch_public(self, url: str) -> HttpResponse:
+        headers = {
+            "Accept": "text/html,application/xhtml+xml,*/*;q=0.8",
+            "Accept-Encoding": "gzip",
+            "Accept-Language": "zh-CN,zh;q=0.9",
+            "Connection": "close",
+            "Referer": "https://www.jjwxc.net/",
+            "User-Agent": WEB_USER_AGENT,
+        }
+        assert_public_book_request(url, headers)
+        requested = urlparse(url)
+        last_status = 0
+        for attempt in range(self.max_retries + 1):
+            self.limiter.wait()
+            request = urllib.request.Request(url, headers=headers)
+            try:
+                with urllib.request.urlopen(
+                    request,
+                    timeout=self.timeout,
+                    context=self._ssl_context,
+                ) as response:
+                    final = urlparse(response.geturl())
+                    if (
+                        final.scheme != requested.scheme
+                        or final.hostname != requested.hostname
+                        or final.path != requested.path
+                    ):
+                        raise JjwxcRankError("jjwxc book page unavailable")
+                    body = response.read()
+                    encoding = response.headers.get("Content-Encoding", "")
+                    return HttpResponse(
+                        url="",
+                        status=int(response.status),
+                        headers={},
+                        text=_decode_public(body, encoding),
+                    )
+            except JjwxcRankError:
+                raise
+            except urllib.error.HTTPError as exc:
+                last_status = int(exc.code)
+                exc.close()
+                if last_status in {403, 429} or attempt >= self.max_retries:
+                    break
+            except (TimeoutError, urllib.error.URLError, OSError):
+                last_status = 0
+                if attempt >= self.max_retries:
+                    break
+            if attempt < self.max_retries:
+                time.sleep(min(2 ** attempt, 4))
+        if last_status:
+            raise JjwxcRankError(f"jjwxc book page http status {last_status}")
+        raise JjwxcRankError("jjwxc book page request failed")

@@ -1,4 +1,4 @@
-"""JJWXC bookstore rank client. Lists only; no chapter download."""
+"""JJWXC bookstore rank client. Ranks plus public book-page counts; no chapter download."""
 
 from .rank import (
     INDEX_ONLY_BOARDS,

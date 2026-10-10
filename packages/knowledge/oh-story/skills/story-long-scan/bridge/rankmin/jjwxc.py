@@ -2,7 +2,8 @@
 
 The request path is the copied client in bridge/jjwxc_app. This file maps a
 named board into scan markdown and walks pages until the caller has enough
-books, the board ends, or the page cap is hit. It does not open book pages.
+books, the board ends, or the page cap is hit. Each kept book then reads the
+public book page for 收藏, 营养液, 积分, and 字数. It does not download chapters.
 """
 
 from __future__ import annotations
@@ -14,7 +15,7 @@ from typing import Any
 from .contracts import RankFetchError, RankItem, RankSnapshot, SourceSpec
 from .textutil import now_cst_iso
 
-PARSER_VERSION = "jjwxc_app_rank_v1"
+PARSER_VERSION = "jjwxc_app_rank_v2"
 PROTOCOL_MAX_PAGES = 40
 DEFAULT_CATEGORIES = (
     "月度排行榜·言情",
@@ -102,7 +103,7 @@ def jjwxc_source(category: str) -> SourceSpec:
         category_name=label,
         url=modules["url"],
         required_adapters=["jjwxc_app_rank"],
-        known_risks=["no_score_fields", "no_chapter_fallback", "page_cap_40"],
+        known_risks=["book_page_metrics", "no_chapter_fallback", "page_cap_40"],
     )
 
 
@@ -120,6 +121,60 @@ def _note(result: Any, limit: int, pages_needed: int, page_size: int) -> str:
     return f"翻了 {result.page_count} 页，按请求保留 {min(limit, len(result.books))} 本"
 
 
+def _apply_metrics(item: RankItem, metrics: Any) -> None:
+    if metrics.word_count:
+        item.word_count_text = metrics.word_count
+        item.field_confidence["word_count_text"] = "verified"
+    if metrics.favorite_count:
+        item.extra["favorite_count"] = metrics.favorite_count
+        item.field_confidence["favorite_count"] = "verified"
+    if metrics.nutrition_count:
+        item.extra["nutrition_count"] = metrics.nutrition_count
+        item.field_confidence["nutrition_count"] = "verified"
+    if metrics.score_count:
+        item.extra["score_count"] = metrics.score_count
+        item.field_confidence["score_count"] = "verified"
+
+
+def _book_note(items: list[RankItem], client: Any) -> str:
+    if client is None or not hasattr(client, "fetch_public"):
+        return ""
+    bridge = Path(__file__).resolve().parents[1]
+    bridge_text = str(bridge)
+    if bridge_text not in sys.path:
+        sys.path.insert(0, bridge_text)
+    from jjwxc_app.book import fetch_book_metrics
+    from jjwxc_app.http import JjwxcRankError
+
+    complete = 0
+    partial = 0
+    missed = 0
+    for item in items:
+        try:
+            metrics = fetch_book_metrics(item.book_id, client=client)
+        except (JjwxcRankError, ValueError):
+            missed += 1
+            continue
+        _apply_metrics(item, metrics)
+        filled = any((
+            metrics.word_count,
+            metrics.favorite_count,
+            metrics.score_count,
+            metrics.nutrition_count,
+        ))
+        if metrics.complete():
+            complete += 1
+        elif filled:
+            partial += 1
+        else:
+            missed += 1
+    if items and partial == 0 and missed == 0:
+        return "作品页补了收藏、营养液、积分、字数"
+    if complete == 0 and partial == 0:
+        return "作品页没读到"
+    return f"作品页 {complete} 本补全，{partial + missed} 本没读全"
+
+
 def fetch_jjwxc_rank(category: str, limit: int, *, client: Any = None) -> RankSnapshot:
     if isinstance(limit, bool) or not isinstance(limit, int) or limit < 1:
         raise RankFetchError("jjwxc limit must be at least 1")
@@ -128,6 +183,14 @@ def fetch_jjwxc_rank(category: str, limit: int, *, client: Any = None) -> RankSn
     board_id = resolve_jjwxc_category(category)
     page_size = modules["page_size"]
     pages_needed = min(PROTOCOL_MAX_PAGES, (limit + page_size - 1) // page_size)
+    if client is None:
+        bridge = Path(__file__).resolve().parents[1]
+        bridge_text = str(bridge)
+        if bridge_text not in sys.path:
+            sys.path.insert(0, bridge_text)
+        from jjwxc_app.http import JjwxcHttpClient
+
+        client = JjwxcHttpClient()
     try:
         result = modules["fetch_pages"](board_id, max_pages=pages_needed, client=client)
     except modules["error"] as exc:
@@ -155,6 +218,10 @@ def fetch_jjwxc_rank(category: str, limit: int, *, client: Any = None) -> RankSn
             book_url=f"https://www.jjwxc.net/onebook.php?novelid={book.novel_id}",
             field_confidence={"book_name": "verified"},
         ))
+    notes = [_note(result, limit, pages_needed, page_size)]
+    book_note = _book_note(items, client)
+    if book_note:
+        notes.append(book_note)
     return RankSnapshot(
         site=source.site_id,
         site_name=source.site_name,
@@ -166,6 +233,6 @@ def fetch_jjwxc_rank(category: str, limit: int, *, client: Any = None) -> RankSn
         items=items,
         raw_ref="",
         parse_status="ok",
-        source_notes=[_note(result, limit, pages_needed, page_size)],
+        source_notes=notes,
         parser_version=PARSER_VERSION,
     )

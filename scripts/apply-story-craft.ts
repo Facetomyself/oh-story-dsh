@@ -126,8 +126,10 @@ const replacements: readonly Replacement[] = [
   {
     path: "skills/story-long-scan/SKILL.md",
     to: `| 五份平台参考（链接见 Phase 2） | 起点、番茄、刺猬猫、晋江读「分析维度」和字段；七猫本版本没有 provider，不执行其中的采集命令 |
+| [bridge/rankmin_cli.py](bridge/rankmin_cli.py) | 起点移动榜、番茄分类落地、刺猬猫 App 排行、晋江书店榜。\`--self-test\` 不联网。stdout 是已写出的榜；有榜失败则退出码 2，stderr 点名，不编造榜单，也不要打开网页榜、library 页或作品页去补 |`,
+    from: [`| 五份平台参考（链接见 Phase 2） | 起点、番茄、刺猬猫、晋江读「分析维度」和字段；七猫本版本没有 provider，不执行其中的采集命令 |
 | [bridge/rankmin_cli.py](bridge/rankmin_cli.py) | 起点移动榜、番茄榜单页、刺猬猫 App 排行、晋江书店榜。\`--self-test\` 不联网。失败退出码 2，不编造榜单 |`,
-    from: [`| 五份平台参考（链接见 Phase 2） | 起点、番茄、刺猬猫读「分析维度」和字段；七猫、晋江本版本没有 provider，不执行其中的采集命令 |
+      `| 五份平台参考（链接见 Phase 2） | 起点、番茄、刺猬猫读「分析维度」和字段；七猫、晋江本版本没有 provider，不执行其中的采集命令 |
 | [bridge/rankmin_cli.py](bridge/rankmin_cli.py) | 起点移动榜、番茄榜单页、刺猬猫 App 排行。\`--self-test\` 不联网。失败退出码 2，不编造榜单 |`,
       `| 五份平台参考（链接见 Phase 2） | 起点、番茄读「分析维度」和字段；七猫、晋江、刺猬猫本版本没有 provider，不执行其中的采集命令 |
 | [bridge/rankmin_cli.py](bridge/rankmin_cli.py) | 起点移动榜和番茄榜单页。\`--self-test\` 不联网。失败退出码 2，不编造榜单 |`,
@@ -147,26 +149,42 @@ const replacements: readonly Replacement[] = [
   },
   {
     path: "skills/story-long-scan/references/platform-qidian.md",
-    to: "在技能目录执行 `python3 bridge/rankmin_cli.py --out {输出目录} --limit 20 --qidian {榜单别名}`。别名用下表的 `--type` 列。不要全采，不要进详情页，不要 CDP。",
-    from: ["`node scripts/qidian-rank-scraper.js --type {榜单} --outdir {输出目录}`（`--type all` 全采；`--mode mobile|cdp` 强制一种方式；`--detail yes` 进详情页补标签、简介、最新更新）"]
+    to: "在技能目录执行 `python3 bridge/rankmin_cli.py --out {输出目录} --limit 20 --qidian {榜单别名}`。可跑的别名是 yuepiao、hotsales、readindex、newfans、recom、vipup、signnewbook、pubnewbook、newsign、newauthor。不要把 sanjiang、collect、女生精选或女生月票写进命令。不要全采，不要进详情页，不要打开网页榜去补失败的榜，不要 CDP。",
+    from: [
+      "在技能目录执行 `python3 bridge/rankmin_cli.py --out {输出目录} --limit 20 --qidian {榜单别名}`。别名用下表的 `--type` 列。不要全采，不要进详情页，不要 CDP。",
+      "`node scripts/qidian-rank-scraper.js --type {榜单} --outdir {输出目录}`（`--type all` 全采；`--mode mobile|cdp` 强制一种方式；`--detail yes` 进详情页补标签、简介、最新更新）"
+    ]
+  },
+  {
+    path: "skills/story-long-scan/references/platform-qidian.md",
+    to: "| 三江推荐 | 解析器不接受，不要写入命令 | qidian.com/sanjiang/ | 编辑精选，按周分组（非 /rank/ 路径） |\n| 月票榜 | yuepiao | qidian.com/rank/yuepiao/ | 付费认可度最高 |\n| 畅销榜 | hotsales | qidian.com/rank/hotsales/ | 真金白银投票 |\n| 阅读指数榜 | readindex | qidian.com/rank/readindex/ | 阅读量综合 |\n| 收藏榜 | 解析器不接受，不要写入命令 | qidian.com/rank/collect/ | 读者关注热度 |",
+    from: ["| 三江推荐 | sanjiang | qidian.com/sanjiang/ | 编辑精选，按周分组（非 /rank/ 路径） |\n| 月票榜 | yuepiao | qidian.com/rank/yuepiao/ | 付费认可度最高 |\n| 畅销榜 | hotsales | qidian.com/rank/hotsales/ | 真金白银投票 |\n| 阅读指数榜 | readindex | qidian.com/rank/readindex/ | 阅读量综合 |\n| 收藏榜 | collect | qidian.com/rank/collect/ | 读者关注热度 |"]
   },
   {
     path: "skills/story-long-scan/references/platform-fanqie.md",
-    to: "作者选了番茄才读本文。采集走本技能 `bridge/fanqie_app` 的 App 分类榜，经 `bridge/rankmin_cli.py` 写榜。`hot` 是分类热门，`newbook` 是分类最新。不要启动 CDP，不要下章节，不要进网页榜补标题。",
+    to: "作者选了番茄才读本文。采集走本技能 `bridge/fanqie_app` 的 App 分类榜，经 `bridge/rankmin_cli.py` 写榜。`hot` 是分类热门，`newbook` 是分类最新，`rising` 是该题材连载、30 万字以下、按热度的新书。没有跨题材书库列表。不要启动 CDP，不要下章节，不要抓 library 页，不要进网页榜补标题。",
     from: [
+      "作者选了番茄才读本文。采集走本技能 `bridge/fanqie_app` 的 App 分类榜，经 `bridge/rankmin_cli.py` 写榜。`hot` 是分类热门，`newbook` 是分类最新。不要启动 CDP，不要下章节，不要进网页榜补标题。",
       "作者选了番茄才读本文。采集只走本技能 `bridge/rankmin_cli.py` 的榜单页。书名若仍是私用区字符，命令失败并指出缺的字段。不要启动 CDP，不要进详情页或章节页补标题。",
       "作者选了番茄才读本文。番茄列表页有字体反爬，须先用 `/browser-cdp` 启动 Chrome，再由脚本从详情页（内嵌 JSON `bookName`/`author`/`abstract`/`categoryV2` + `<title>` + og:meta）多策略解码书名、作者、题材、标签、简介。"
     ]
   },
   {
     path: "skills/story-long-scan/references/platform-fanqie.md",
-    to: "```bash\npython3 bridge/rankmin_cli.py --out {输出目录} --limit 20 --fanqie male-hot-xifangqihuan,female-hot-gufengshiqing\n```\n\n别名示例：`male-hot-xifangqihuan`、`female-newbook-gufengshiqing`、`1_2_1141`。不要一次扫完全部题材。",
-    from: ["```bash\nnode scripts/fanqie-rank-scraper.js --channel 1 --type 2 --outdir {输出目录}     # 男频阅读榜（默认）\nnode scripts/fanqie-rank-scraper.js --channel all --top 15 --outdir {输出目录}   # 男女频，每题材前 15 本\n```"]
+    to: "```bash\npython3 bridge/rankmin_cli.py --out {输出目录} --limit 20 --fanqie male-hot-xifangqihuan,female-hot-gufengshiqing\n```\n\n别名示例：`male-hot-xifangqihuan`、`female-newbook-gufengshiqing`、`male-rising-dushinaodong`、`female-rising-gufengshiqing`、`1_2_1141`。默认四个分类不要改成 rising。要看题材新书时，把 `male-rising-<题材>`,`female-rising-<题材>` 加在同一条 `--fanqie` 上。`rising` 只按题材取连载且 30 万字以下的热度。失败的榜不要打开网页榜、library 页或作品页去补。不要一次扫完全部题材。",
+    from: [
+      "```bash\npython3 bridge/rankmin_cli.py --out {输出目录} --limit 20 --fanqie male-hot-xifangqihuan,female-hot-gufengshiqing\n```\n\n别名示例：`male-hot-xifangqihuan`、`female-newbook-gufengshiqing`、`male-rising-dushinaodong`、`female-rising-gufengshiqing`、`1_2_1141`。`rising` 只按题材取连载且 30 万字以下的热度。不要一次扫完全部题材。",
+      "```bash\npython3 bridge/rankmin_cli.py --out {输出目录} --limit 20 --fanqie male-hot-xifangqihuan,female-hot-gufengshiqing\n```\n\n别名示例：`male-hot-xifangqihuan`、`female-newbook-gufengshiqing`、`1_2_1141`。不要一次扫完全部题材。",
+      "```bash\nnode scripts/fanqie-rank-scraper.js --channel 1 --type 2 --outdir {输出目录}     # 男频阅读榜（默认）\nnode scripts/fanqie-rank-scraper.js --channel all --top 15 --outdir {输出目录}   # 男女频，每题材前 15 本\n```"
+    ]
   },
   {
     path: "skills/story-long-scan/references/platform-fanqie.md",
-    to: "书库「最热」不在本版本的 provider 里。不要抓 library 页，也不要进详情页补标题。",
-    from: ["```bash\nnode scripts/fanqie-rank-scraper.js --source library --channel all --outdir {输出目录}            # 男、女各一份：连载中、30 万字以下、前 3 页\nnode scripts/fanqie-rank-scraper.js --source library --channel mix --pages 5 --outdir {输出目录}  # 不分男女\n```"]
+    to: "网页书库「最热」没有跨题材入口。同一筛选按题材走 `rising`，例如 `male-rising-dushinaodong`。不要抓 library 页，也不要进详情页补标题。",
+    from: [
+      "书库「最热」不在本版本的 provider 里。不要抓 library 页，也不要进详情页补标题。",
+      "```bash\nnode scripts/fanqie-rank-scraper.js --source library --channel all --outdir {输出目录}            # 男、女各一份：连载中、30 万字以下、前 3 页\nnode scripts/fanqie-rank-scraper.js --source library --channel mix --pages 5 --outdir {输出目录}  # 不分男女\n```"
+    ]
   },
   {
     path: "skills/story-long-scan/references/platform-qimao.md",
@@ -175,8 +193,9 @@ const replacements: readonly Replacement[] = [
   },
   {
     path: "skills/story-long-scan/references/platform-jjwxc.md",
-    to: "作者选了晋江才读本文。采集走本技能 `bridge/jjwxc_app` 的书店榜协议，经 `bridge/rankmin_cli.py` 写榜。72 个频道分页都能拉，默认只拉作者点名的榜。作者积分榜和 TOP100 没有频道分页。不要启动 CDP，不要进详情页，不要下章节。",
+    to: "作者选了晋江才读本文。采集走本技能 `bridge/jjwxc_app` 的书店榜协议，经 `bridge/rankmin_cli.py` 写榜。72 个频道分页都能拉，默认只拉作者点名的榜。每本再读公开作品页上的收藏、营养液、积分和字数。作者积分榜和 TOP100 没有频道分页。不要启动 CDP，不要下章节。",
     from: [
+      "作者选了晋江才读本文。采集走本技能 `bridge/jjwxc_app` 的书店榜协议，经 `bridge/rankmin_cli.py` 写榜。72 个频道分页都能拉，默认只拉作者点名的榜。作者积分榜和 TOP100 没有频道分页。不要启动 CDP，不要进详情页，不要下章节。",
       "作者选了晋江才读本文。本版本没有晋江 provider。不要启动 CDP，也不要把下文命令改回采集脚本。作者没有提供榜单时，结论不含晋江。分析维度只作历史对照。",
       "作者选了晋江才读本文。需先用 `/browser-cdp` 启动 Chrome。脚本两步走：① 列表页 `topten.php` 取频道分组与书名/作者，从书名链接取 `novelid`（排除「X 向《书名》投了 Y」霸王票记录）；② 进 `onebook.php?novelid=` 详情页补采核心指标。晋江是 gb18030 编码，脚本已按此解码；详情指标公开，无需登录。"
     ]
@@ -197,8 +216,9 @@ const replacements: readonly Replacement[] = [
   },
   {
     path: "skills/story-long-scan/references/platform-jjwxc.md",
-    to: "在技能目录执行 `python3 bridge/rankmin_cli.py --out {输出目录} --limit 20 --jjwxc 月度排行榜·言情,月度排行榜·纯爱,新晋作者榜·言情,完结金榜·言情`。别名是「榜名·频道」。`--limit` 大于 20 时按页继续，直到本数够、短页或重复页。到了 40 页上限，末页仍满且本数不够时，这次榜失败。本数已经够但末页仍满时，文件会写明后面可能还有，不要把这一页当成榜尾。不要一次扫完全部频道，不要进详情页，不要下章节。",
+    to: "在技能目录执行 `python3 bridge/rankmin_cli.py --out {输出目录} --limit 20 --jjwxc 月度排行榜·言情,月度排行榜·纯爱,新晋作者榜·言情,完结金榜·言情`。别名是「榜名·频道」。`--limit` 大于 20 时按页继续，直到本数够、短页或重复页。到了 40 页上限，末页仍满且本数不够时，这次榜失败。本数已经够但末页仍满时，文件会写明后面可能还有，不要把这一页当成榜尾。命令会读这些书的公开作品页，写入收藏、营养液、积分和字数。不要一次扫完全部频道，不要下章节。",
     from: [
+      "在技能目录执行 `python3 bridge/rankmin_cli.py --out {输出目录} --limit 20 --jjwxc 月度排行榜·言情,月度排行榜·纯爱,新晋作者榜·言情,完结金榜·言情`。别名是「榜名·频道」。`--limit` 大于 20 时按页继续，直到本数够、短页或重复页。到了 40 页上限，末页仍满且本数不够时，这次榜失败。本数已经够但末页仍满时，文件会写明后面可能还有，不要把这一页当成榜尾。不要一次扫完全部频道，不要进详情页，不要下章节。",
       "在技能目录执行 `python3 bridge/rankmin_cli.py --out {输出目录} --limit 20 --jjwxc 月度排行榜·言情,月度排行榜·纯爱,新晋作者榜·言情,完结金榜·言情`。别名是「榜名·频道」。`--limit` 大于 20 时按页继续，直到本数够、短页、重复页，或 40 页上限。上限处末页仍满则这次榜失败，不要把截断当成榜尾。不要一次扫完全部频道，不要进详情页，不要下章节。",
       "本版本不执行采集命令。上面的 URL 只说明榜单曾经在哪。",
       "```bash\nnode scripts/jjwxc-rank-scraper.js --type 12 --outdir {输出目录}        # 列表+详情（默认每频道前 10，详情上限 100）\nnode scripts/jjwxc-rank-scraper.js --type 12 --top 15 --detail-limit 60  # 调整每频道本数/详情总量\nnode scripts/jjwxc-rank-scraper.js --type 12 --list-only                 # 只采列表（快，无核心指标）\n```"
@@ -224,21 +244,26 @@ const replacements: readonly Replacement[] = [
   },
   {
     path: "skills/story-long-scan/references/platform-fanqie.md",
-    to: "书库筛选不在本版本里。缺标题就停，不要按页面顺序补 bookId，也不要进详情页解码。",
-    from: ["`--stat 1|0|any`、`--count 0-4|any` 改筛选。默认组合（连载中、30 万字以下）是**正在起量的新书**：阅读榜被老书占住时，看它才知道新书里什么题材在冒头，文件名与列表名带「新书」，聚合时算进「新书榜」列。列表页书名和数字都被字体反爬，脚本只按页面顺序取 bookId，书名、题材、在读、字数都由详情页解码。"]
+    to: "`rising` 已是连载、30 万字以下、按热度。不要再改网页筛选，缺标题就停，不要按页面顺序补 bookId，也不要进详情页解码。",
+    from: [
+      "书库筛选不在本版本里。缺标题就停，不要按页面顺序补 bookId，也不要进详情页解码。",
+      "`--stat 1|0|any`、`--count 0-4|any` 改筛选。默认组合（连载中、30 万字以下）是**正在起量的新书**：阅读榜被老书占住时，看它才知道新书里什么题材在冒头，文件名与列表名带「新书」，聚合时算进「新书榜」列。列表页书名和数字都被字体反爬，脚本只按页面顺序取 bookId，书名、题材、在读、字数都由详情页解码。"
+    ]
   },
   {
     path: "skills/story-long-scan/references/platform-fanqie.md",
-    to: "命令退出码 2 时这次榜单作废。不要打开作品页，不要启动 Chrome，也不要下章节。",
+    to: "stdout 打出的路径就是这次拿到的榜，先读这些文件。任一榜失败则退出码 2，stderr 会点名失败的榜。不要打开网页榜、library 页或作品页去补，不要启动 Chrome，也不要下章节。",
     from: [
+      "命令退出码 2 时这次榜单作废。不要打开作品页，不要启动 Chrome，也不要下章节。",
       "命令退出码 2 且指出私用区字段时，这次榜单作废。不要打开作品页，不要启动 Chrome，也不要重采详情。",
       "文件头 `数据质量` 标 `[标题解析异常]`（书名多为 `（标题待解析）`）：多为详情页结构变动或被登录/验证页拦截。在已登录的 Chrome 里手动打开任一 `https://fanqienovel.com/page/{bookId}`，确认页面正常、不是验证页；控制台报 `CDP 无响应` 就按 browser-cdp 重新启动 Chrome。确认正常后重采。"
     ]
   },
   {
     path: "skills/story-long-scan/references/platform-jjwxc.md",
-    to: "这份榜有频道、排名、书名、作者和作品页。收藏、营养液、积分、字数不在接口里，文件里标 [待补]；作者另给的样本如果没有这些数，标成数据不够。不要为此去抓详情页。",
+    to: "这份榜有频道、排名、书名、作者、作品页，以及作品页上的收藏、营养液、积分、字数。某一项没读到就标 [待补]。作者另给的样本如果没有这些数，标成数据不够。不要另开页面去补，也不要下章节。",
     from: [
+      "这份榜有频道、排名、书名、作者和作品页。收藏、营养液、积分、字数不在接口里，文件里标 [待补]；作者另给的样本如果没有这些数，标成数据不够。不要为此去抓详情页。",
       "频道（聚合时当题材）、排名、书名、作者、novelid、收藏数（核心，聚合的热度口径）、营养液、积分、字数、状态、作品页链接。App 榜给出排名、书名、作者和作品页。收藏、营养液、积分、字数不在这份榜上，文件里标 [待补]。作者自己提供的样本如果没有这些数，标成数据不够。不要为此去抓详情页。",
       "作者自己提供的晋江样本如果没有收藏、营养液或积分、字数，标成数据不够，不要为此去抓详情页。",
       "必须有详情页核心指标（收藏、营养液或积分、字数）：用了 `--list-only` 或文件头标 `[仅列表-无核心指标]` 的数据撑不起下面的分析，视为不合格，要重采。"

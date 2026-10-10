@@ -16,8 +16,14 @@ PARSER_VERSION = "fanqie_initial_state_v2"
 STATE_MARKER = "window.__INITIAL_STATE__"
 BASE_URL = "https://fanqienovel.com/rank"
 BASE_PAGE = "https://fanqienovel.com/"
-_CATEGORY_PATTERN = re.compile(r"^[01]_[12]_\d+$")
+LANDING_SOURCE_URL = (
+    "https://api5-normal-sinfonlinea.fqnovel.com/reading/bookapi/new_category/landing/v:version/"
+)
+_CATEGORY_PATTERN = re.compile(r"^[01]_[123]_\d+$")
 CHECKED_FIELDS = ("book_name", "author_name", "description")
+RISING_BOOK_STATUS = 1
+RISING_WORD_NUMBER = 4
+RISING_WORD_LIMIT = 300_000
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,6 +83,7 @@ RANK_TYPES = {
     "reading": {"code": "2", "name": "热门", "sort_by": 24},
     "new": {"code": "1", "name": "最新", "sort_by": 76},
     "newbook": {"code": "1", "name": "最新", "sort_by": 76},
+    "rising": {"code": "3", "name": "新书", "sort_by": 24},
 }
 GENDERS = {"male": "1", "m": "1", "nan": "1", "female": "0", "f": "0", "nv": "0"}
 GENDER_NAMES = {"1": "男频", "0": "女频"}
@@ -107,7 +114,12 @@ def resolve_fanqie_category(value: str) -> str:
         if part in GENDERS:
             gender_code = GENDERS[part]
         elif part in RANK_TYPES:
-            rank_key = "newbook" if part in {"new", "newbook"} else "hot"
+            if part in {"new", "newbook"}:
+                rank_key = "newbook"
+            elif part == "rising":
+                rank_key = "rising"
+            else:
+                rank_key = "hot"
         else:
             genre_slug = part
     if not genre_slug:
@@ -118,13 +130,27 @@ def resolve_fanqie_category(value: str) -> str:
     raise RankFetchError(f"fanqie category unsupported: {value}")
 
 
+def _rank_key_from_code(rank_code: str) -> str:
+    if rank_code == "1":
+        return "newbook"
+    if rank_code == "3":
+        return "rising"
+    return "hot"
+
+
 def fanqie_source(category: str) -> SourceSpec:
     resolved = resolve_fanqie_category(category)
     gender_code, rank_code, genre_id = resolved.split("_", 2)
-    rank_key = "newbook" if rank_code == "1" else "hot"
+    rank_key = _rank_key_from_code(rank_code)
     genre = next((item for item in GENRES_BY_GENDER.get(gender_code, ()) if item.category_id == genre_id), None)
     rank = RANK_TYPES[rank_key]
     genre_name = genre.name if genre else genre_id
+    if rank_key == "rising":
+        risks = [
+            "rising is per-genre serializing under-300k by heat via category landing; not the web library cross-genre list; chapter download is not used",
+        ]
+    else:
+        risks = ["category landing is 热门/最新, not the web rank font page; chapter download is not used"]
     return SourceSpec(
         site_id="fanqie",
         site_name="番茄小说",
@@ -132,9 +158,9 @@ def fanqie_source(category: str) -> SourceSpec:
         semantic_key=f"{'male' if gender_code == '1' else 'female'}-{rank_key}",
         category=resolved,
         category_name=f"{GENDER_NAMES[gender_code]}{rank['name']} / {genre_name}",
-        url=f"{BASE_URL}/{resolved}",
+        url=LANDING_SOURCE_URL,
         required_adapters=["fanqie_app_category_landing"],
-        known_risks=["category landing is 热门/最新, not the web rank font page; chapter download is not used"],
+        known_risks=risks,
     )
 
 
@@ -357,21 +383,34 @@ def _walk_books(node: object, found: list[dict[str, Any]]) -> None:
             _walk_books(item, found)
 
 
-def _landing_books(category_id: str, *, sort_by: int, query_gender: int, limit: int) -> list[dict[str, Any]]:
-    client = _fanqie_client()
+def _landing_books(
+    category_id: str,
+    *,
+    sort_by: int,
+    query_gender: int,
+    limit: int,
+    book_status: int | None = None,
+    word_number: int | None = None,
+    client: Any = None,
+) -> list[dict[str, Any]]:
+    client = client or _fanqie_client()
     collected: list[dict[str, Any]] = []
     seen: set[str] = set()
     offset = 0
     while len(collected) < limit:
         page_limit = min(30, limit - len(collected))
+        kwargs: dict[str, Any] = {
+            "offset": offset,
+            "limit": page_limit,
+            "sort_by": sort_by,
+            "query_gender": query_gender,
+        }
+        if book_status is not None:
+            kwargs["book_status"] = book_status
+        if word_number is not None:
+            kwargs["word_number"] = word_number
         try:
-            payload = client.category_landing(
-                category_id,
-                offset=offset,
-                limit=page_limit,
-                sort_by=sort_by,
-                query_gender=query_gender,
-            )
+            payload = client.category_landing(category_id, **kwargs)
         except Exception as exc:
             raise RankFetchError(f"fanqie request failed: {type(exc).__name__}") from None
         page: list[dict[str, Any]] = []
@@ -392,14 +431,62 @@ def _landing_books(category_id: str, *, sort_by: int, query_gender: int, limit: 
     return collected[:limit]
 
 
-def fetch_fanqie_rank(category: str, limit: int = 20) -> RankSnapshot:
+def _pure_int(value: object) -> int | None:
+    if isinstance(value, bool) or value is None:
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        text = value.strip()
+        if text.isdigit():
+            return int(text)
+    return None
+
+
+def rising_book_eligible(book: dict[str, Any]) -> bool:
+    """Keep a rising row only when it is explicitly serial and under 300000 words."""
+    if "creation_status" in book:
+        status = book.get("creation_status")
+    elif "creationStatus" in book:
+        status = book.get("creationStatus")
+    else:
+        return False
+    if isinstance(status, bool) or status not in ("1", 1):
+        return False
+    words: int | None = None
+    for key in ("word_number", "wordNumber"):
+        if key not in book:
+            continue
+        parsed = _pure_int(book.get(key))
+        if parsed is not None:
+            words = parsed
+            break
+    if words is None:
+        return False
+    return words < RISING_WORD_LIMIT
+
+
+def fetch_fanqie_rank(category: str, limit: int = 20, *, client: Any = None) -> RankSnapshot:
     if limit < 1:
         raise RankFetchError("fanqie limit must be at least 1")
     source = fanqie_source(category)
     gender_code, rank_code, genre_id = source.category.split("_", 2)
-    sort_by = 76 if rank_code == "1" else 24
+    rank_key = _rank_key_from_code(rank_code)
+    sort_by = RANK_TYPES[rank_key]["sort_by"]
     query_gender = 0 if gender_code == "0" else 1
-    books = _landing_books(genre_id, sort_by=sort_by, query_gender=query_gender, limit=limit)
+    book_status = RISING_BOOK_STATUS if rank_key == "rising" else None
+    word_number = RISING_WORD_NUMBER if rank_key == "rising" else None
+    books = _landing_books(
+        genre_id,
+        sort_by=sort_by,
+        query_gender=query_gender,
+        limit=limit,
+        book_status=book_status,
+        word_number=word_number,
+        client=client,
+    )
+    if rank_key == "rising":
+        books = [book for book in books if rising_book_eligible(book)]
     if not books:
         raise RankFetchError(f"fanqie book_list_empty: category={source.category}")
     items: list[dict[str, Any]] = []
@@ -407,12 +494,25 @@ def fetch_fanqie_rank(category: str, limit: int = 20) -> RankSnapshot:
         item = dict(book)
         item["_rank_position"] = index
         items.append(item)
+    if rank_key == "rising":
+        parser_version = "fanqie_app_category_landing_v2"
+        source_notes = [
+            "fanqie_app_category_landing",
+            "rising:serializing under-300k by heat, not category 最新, not web library all-genre",
+            f"sort_by:{sort_by}",
+            f"query_gender:{query_gender}",
+            f"book_status:{book_status}",
+            f"word_number:{word_number}",
+        ]
+    else:
+        parser_version = "fanqie_app_category_landing_v1"
+        source_notes = ["fanqie_app_category_landing", f"sort_by:{sort_by}", f"query_gender:{query_gender}"]
     parsed = ParseResult(
         ok=True,
         items=items,
         category_name=source.category_name,
-        parser_version="fanqie_app_category_landing_v1",
-        source_notes=["fanqie_app_category_landing", f"sort_by:{sort_by}", f"query_gender:{query_gender}"],
+        parser_version=parser_version,
+        source_notes=source_notes,
     )
     snapshot = normalize_fanqie(source, parsed)
     bad = polluted_fields(snapshot)

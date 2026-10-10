@@ -98,7 +98,6 @@ describe("Oh Story bundled skill provider", () => {
     for (const name of ["story-long-scan", "story-short-scan"]) {
       const candidate = candidates.find((value) => value.name === name);
       const scan = await provider.get(candidate!, {});
-      expect(scan?.content).toContain("当前 DSH Preset 可见的网页工具");
       expect(scan?.content).not.toContain("rank-scraper.js");
       expect(scan?.content).not.toContain("WebFetch");
       expect(scan?.content).not.toContain("Bearer token");
@@ -113,12 +112,22 @@ describe("Oh Story bundled skill provider", () => {
     expect(longScan?.content).toContain("--ciweimao");
     expect(longScan?.content).toContain("--jjwxc");
     expect(longScan?.content).toContain("72 个频道分页");
+    expect(longScan?.content).toContain("公开作品页的收藏、营养液、积分和字数");
+    expect(longScan?.content).not.toContain("当前 DSH Preset 可见的网页工具");
+    expect(longScan?.content).toContain("不要打开网页榜、library 页或作品页");
+    const longBody = longScan?.content ?? "";
+    const step3 = longBody.slice(longBody.indexOf("3. 起点默认"), longBody.indexOf("\n4. "));
+    expect(step3).toContain("male-hot-xifangqihuan,male-newbook-xifangqihuan,female-hot-gufengshiqing,female-newbook-gufengshiqing");
+    expect(step3).toContain("male-rising-");
+    expect(step3).toContain("female-rising-");
+    expect(longBody).toContain("不要把 sanjiang、collect、女生精选或女生月票写进命令");
     expect(longScan?.content).toContain("本版本没有 provider");
     expect(longScan?.content).not.toContain("刺猬猫本版本没有");
     expect(longScan?.content).not.toContain("晋江本版本没有");
     expect(longScan?.content).not.toContain("browser-cdp");
     expect((await provider.get(candidates.find((value) => value.name === "story-short-scan")!, {}))?.content).toContain("短篇扫榜结论.md");
     const shortScan = await provider.get(candidates.find((value) => value.name === "story-short-scan")!, {});
+    expect(shortScan?.content).toContain("当前 DSH Preset 可见的网页工具");
     expect(shortScan?.content).toContain("可信度：样本多少篇、来自哪几个榜");
     for (const name of ["story-long-analyze", "story-import"]) {
       const analysis = await provider.get(candidates.find((value) => value.name === name)!, {});

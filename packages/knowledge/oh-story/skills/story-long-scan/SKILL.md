@@ -43,20 +43,20 @@ metadata: {"openclaw":{"source":"https://github.com/zenstory-ai/oh-story-claudec
 
 ### Phase 2：确定数据来源
 
-**扫榜需要真实数据支撑。** 起点、番茄、刺猬猫和晋江只跑本技能目录里的 `bridge/rankmin_cli.py`。起点男频是匿名 HTTP，不带 Cookie，不进详情页，也不保存原始 HTML。番茄走同目录的 `bridge/fanqie_app`，取分类热门和分类最新的明文。刺猬猫走同目录的 `bridge/ciweimao_app`，也就是 App 采集器的协议客户端。晋江走同目录的 `bridge/jjwxc_app`，拉书店榜的频道分页。七猫本版本没有 provider。
+**扫榜需要真实数据支撑。** 起点、番茄、刺猬猫和晋江只跑本技能目录里的 `bridge/rankmin_cli.py`。起点男频是匿名 HTTP，不带 Cookie，不进详情页，也不保存原始 HTML。番茄走同目录的 `bridge/fanqie_app`，取分类热门、分类最新，以及按题材的新书明文。没有跨题材书库列表。刺猬猫走同目录的 `bridge/ciweimao_app`，也就是 App 采集器的协议客户端。晋江走同目录的 `bridge/jjwxc_app`，拉书店榜的频道分页，并读公开作品页上的收藏、营养液、积分和字数。七猫本版本没有 provider。
 
 | 优先级 | 模式 | 说明 | 何时用 |
 |--------|------|------|--------|
-| 1 | **rankmin** | 起点移动男频榜、番茄分类热门/最新、刺猬猫 App 排行、晋江书店榜，写出榜单 markdown | 选了起点、番茄、刺猬猫或晋江 |
+| 1 | **rankmin** | 起点移动男频榜、番茄分类热门/最新/题材新书、刺猬猫 App 排行、晋江书店榜，写出榜单 markdown | 选了起点、番茄、刺猬猫或晋江 |
 | 2 | **用户提供** | 用户粘贴榜单截图/文字 | 用户已有数据，或平台没有 provider |
 | 3 | **内置知识** | 基于知识库趋势数据做分析 | 命令失败且用户无数据时 |
 
 #### 起点和番茄
 
 1. 平台参考只读分析维度和字段：[起点](references/platform-qidian.md) / [番茄](references/platform-fanqie.md)。不要执行参考里的旧命令，不要启动 CDP。
-2. 每次扫榜新建输出目录 `扫榜/{YYYYMMDD}/`（同日再扫加 `-2`）。在本技能目录执行：`python3 bridge/rankmin_cli.py --out {输出目录} --limit 20 --qidian yuepiao,hotsales,readindex`。番茄再加 `--fanqie male-hot-xifangqihuan,male-newbook-xifangqihuan,female-hot-gufengshiqing,female-newbook-gufengshiqing`。作者点名的榜或题材换成对应别名，不要一次扫完全部题材。
+2. 每次扫榜新建输出目录 `扫榜/{YYYYMMDD}/`（同日再扫加 `-2`）。在本技能目录执行：`python3 bridge/rankmin_cli.py --out {输出目录} --limit 20 --qidian yuepiao,hotsales,readindex`。番茄再加 `--fanqie male-hot-xifangqihuan,male-newbook-xifangqihuan,female-hot-gufengshiqing,female-newbook-gufengshiqing`。要看正在起量的新书，把 `male-rising-<题材>`、`female-rising-<题材>` 加在同一条 `--fanqie` 后面，不要写进默认的四个分类。这是该题材连载且 30 万字以下按热度，不是网页书库。作者点名的榜或题材换成对应别名，不要一次扫完全部题材。不要把 sanjiang、collect、女生精选或女生月票写进命令。
 3. 成功时写出 `起点{榜}_{日期}.md` 和 `番茄{榜}_{日期}.md`。主会话读这些文件。本包没有聚合脚本，不要运行 `scripts/` 下的采集或聚合命令。
-4. 退出码 2、缺模块或请求失败：该榜这次没拿到。不要编造名次，不要改走 CDP，也不要去作品页或章节页补标题。起点女生精选榜和女生月票榜当前没有公开列表，报 unavailable 时结论不含这两条。番茄 `hot` 是分类热门，`newbook` 是分类最新。
+4. stdout 打出的路径就是这次拿到的榜，先读这些文件。任一榜失败则退出码 2，stderr 会点名失败的榜。不要编造名次，不要改走 CDP，也不要打开网页榜、library 页或作品页去补。起点女生精选榜和女生月票榜当前没有公开列表，报 unavailable 时结论不含这两条。番茄 `hot` 是分类热门，`newbook` 是分类最新，`rising` 是题材新书。不要抓 library 页。
 5. 同方向不到 15 本标「少」，等同 `[数据稀疏]`。要看某一条的简介，直接打开对应 markdown，一次一个方向。
 
 #### 刺猬猫
@@ -64,16 +64,16 @@ metadata: {"openclaw":{"source":"https://github.com/zenstory-ai/oh-story-claudec
 1. 平台参考只读分析维度：[刺猬猫](references/platform-ciweimao.md)。不要执行参考里的旧命令，不要启动 CDP。
 2. 同一条命令加 `--ciweimao fans_value:week,favor:week,tsukkomi:week,yp_new:month`。作者点名的榜换成 `order:time_type`，不要一次扫完全部。
 3. 成功时写出 `刺猬猫{榜}_{日期}.md`。没有账号环境变量时，客户端按自己的游客注册取得会话，写在运行用户的 `~/.dsh/ciweimao-guest.json`。出口与采集器相同：`CIWEIMAO_PROXY_URL`，或 `KDL_SECRET_ID` / `KDL_SECRET_KEY`，密钥文件也可放在 `~/.dsh/ciweimao/`。不要读 `tokens.json`，不要把会话或代理地址写进报告，不要下章节。
-4. 退出码 2：该榜这次没拿到。缺模块、注册失败或书名缺了哪个 `book_id`，报告里照命令原文写。榜单值写 `[待补]` 时不要改去作品页补。
+4. 退出码 2 时 stderr 会点名失败的榜。stdout 里已经打出的文件照常读。不要打开网页榜、library 页或作品页去补。缺模块、注册失败或书名缺了哪个 `book_id`，报告里照命令原文写。榜单值写 `[待补]` 时不要改去作品页补。
 5. 同方向不到 10 本标「少」。
 
 #### 晋江
 
-1. 平台参考只读分析维度：[晋江](references/platform-jjwxc.md)。不要执行参考里的旧网页命令，不要启动 CDP，不要进详情页。
+1. 平台参考只读分析维度：[晋江](references/platform-jjwxc.md)。不要执行参考里的旧网页命令，不要启动 CDP，不要下章节。
 2. 同一条命令加 `--jjwxc 月度排行榜·言情,月度排行榜·纯爱,新晋作者榜·言情,完结金榜·言情`。别名是「榜名·频道」。12 个父榜各有言情、纯爱、衍生、无CP+、百合、原创。作者点名的榜换成别名，不要一次扫完 72 个频道。
 3. `--limit` 默认 20，只要第一页。要下拉加载的后续条目时提高 `--limit`。客户端按页继续，直到本数够、短页或重复页。到了 40 页上限，末页仍满且本数不够时，这次榜失败。本数已经够但末页仍满时，文件会写明后面可能还有，不要把这一页当成榜尾。
-4. 成功时写出 `晋江{榜}_{日期}.md`。收藏、营养液、积分、字数不在这份榜上，标 `[待补]`，不要进详情页补。作者积分榜和 TOP100 没有频道分页，命令会失败。不下章节。
-5. 退出码 2：该榜这次没拿到。不要编造名次，不要改走 CDP。
+4. 成功时写出 `晋江{榜}_{日期}.md`。收藏、营养液、积分、字数来自公开作品页。没读到的标 `[待补]`。作者积分榜和 TOP100 没有频道分页，命令会失败。不下章节。
+5. 退出码 2 时 stderr 会点名失败的榜。stdout 里已经打出的文件照常读。不要编造名次，不要改走 CDP，也不要打开网页榜、library 页或作品页去补。
 
 #### 七猫
 
@@ -196,7 +196,7 @@ metadata: {"openclaw":{"source":"https://github.com/zenstory-ai/oh-story-claudec
 | [references/genre-trends.md](references/genre-trends.md) | 查看题材趋势候选、切入约束和样本校验规则时 |
 | [references/publishing-guide.md](references/publishing-guide.md) | 平台适配+推荐机制校验+数据指标+简介设计 |
 | 五份平台参考（链接见 Phase 2） | 起点、番茄、刺猬猫、晋江读「分析维度」和字段；七猫本版本没有 provider，不执行其中的采集命令 |
-| [bridge/rankmin_cli.py](bridge/rankmin_cli.py) | 起点移动榜、番茄榜单页、刺猬猫 App 排行、晋江书店榜。`--self-test` 不联网。失败退出码 2，不编造榜单 |
+| [bridge/rankmin_cli.py](bridge/rankmin_cli.py) | 起点移动榜、番茄分类落地、刺猬猫 App 排行、晋江书店榜。`--self-test` 不联网。stdout 是已写出的榜；有榜失败则退出码 2，stderr 点名，不编造榜单，也不要打开网页榜、library 页或作品页去补 |
 
 ---
 

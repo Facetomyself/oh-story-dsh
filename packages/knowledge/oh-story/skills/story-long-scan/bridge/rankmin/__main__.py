@@ -71,29 +71,29 @@ def _run_fetch(
     from .ciweimao import fetch_ciweimao_rank
     from .jjwxc import fetch_jjwxc_rank
 
-    wrote: list[Path] = []
-    try:
-        for category in _split(qidian, ()) if qidian else []:
-            snapshot = fetch_qidian_mobile(category, limit)
-            wrote.append(write_snapshot(snapshot, out_dir, day))
-        for category in _split(fanqie, ()) if fanqie else []:
-            snapshot = fetch_fanqie_rank(category, limit)
-            wrote.append(write_snapshot(snapshot, out_dir, day))
-        for category in _split(ciweimao, ()) if ciweimao else []:
-            snapshot = fetch_ciweimao_rank(category, limit)
-            wrote.append(write_snapshot(snapshot, out_dir, day))
-        for category in _split(jjwxc, ()) if jjwxc else []:
-            snapshot = fetch_jjwxc_rank(category, limit)
-            wrote.append(write_snapshot(snapshot, out_dir, day))
-    except RankFetchError as exc:
-        print(str(exc), file=sys.stderr)
-        return 2
-    if not wrote:
+    jobs: list[tuple[str, str, object]] = []
+    if qidian:
+        jobs.extend(("qidian", category, fetch_qidian_mobile) for category in _split(qidian, ()))
+    if fanqie:
+        jobs.extend(("fanqie", category, fetch_fanqie_rank) for category in _split(fanqie, ()))
+    if ciweimao:
+        jobs.extend(("ciweimao", category, fetch_ciweimao_rank) for category in _split(ciweimao, ()))
+    if jjwxc:
+        jobs.extend(("jjwxc", category, fetch_jjwxc_rank) for category in _split(jjwxc, ()))
+    if not jobs:
         print("name --qidian, --fanqie, --ciweimao, or --jjwxc", file=sys.stderr)
         return 2
-    for path in wrote:
+    failed = False
+    for site, category, fetch in jobs:
+        try:
+            snapshot = fetch(category, limit)  # type: ignore[operator]
+            path = write_snapshot(snapshot, out_dir, day)
+        except Exception as exc:
+            print(f"{site} {category} failed: {exc}", file=sys.stderr)
+            failed = True
+            continue
         print(path)
-    return 0
+    return 2 if failed else 0
 
 
 def self_test() -> int:
@@ -123,6 +123,12 @@ def self_test() -> int:
     fanqie_source_category = resolve_fanqie_category("male-hot-xifangqihuan")
     if fanqie_source_category != "1_2_1141":
         print(f"fanqie alias failed: {fanqie_source_category}", file=sys.stderr)
+        return 2
+    checks += 1
+    fanqie_rising = resolve_fanqie_category("male-rising-dushinaodong")
+    fanqie_female_rising = resolve_fanqie_category("female-rising-gufengshiqing")
+    if fanqie_rising != "1_3_262" or fanqie_female_rising != "0_3_1139":
+        print(f"fanqie rising alias failed: {fanqie_rising} {fanqie_female_rising}", file=sys.stderr)
         return 2
     checks += 1
     from .fanqie import fanqie_source
@@ -253,8 +259,162 @@ def self_test() -> int:
     if jjwxc_checks == 0:
         return 2
     checks += jjwxc_checks
+    if _partial_board_self_test() == 0:
+        return 2
+    checks += 1
+    if _fanqie_rising_self_test() == 0:
+        return 2
+    checks += 1
     print(f"rankmin self-test ok ({checks})")
     return 0
+
+
+def _snapshot_for(category: str) -> object:
+    from .contracts import RankItem, RankSnapshot
+
+    label = "月票榜" if category == "yuepiao" else "畅销榜"
+    return RankSnapshot(
+        site="qidian",
+        site_name="起点中文网",
+        category=f"mobile-{category}",
+        category_name=label,
+        semantic_key=category,
+        source_url="https://m.qidian.com/rank/",
+        snapshot_at="2026-10-10T00:00:00+08:00",
+        items=[RankItem(rank_position=1, book_id="1", book_name=f"隔离{category}")],
+        raw_ref="fixture",
+        parse_status="ok",
+    )
+
+
+def _partial_board_self_test() -> int:
+    """One failed board must not hide a sibling that already wrote."""
+    global fetch_qidian_mobile
+    import io
+    import tempfile
+    from contextlib import redirect_stderr, redirect_stdout
+
+    original = fetch_qidian_mobile
+
+    def patched(category: str, limit: int = 20):
+        del limit
+        if category == "mm":
+            return original(category, 1)
+        if category == "boom":
+            raise ValueError("bad book id")
+        return _snapshot_for(category)
+
+    try:
+        fetch_qidian_mobile = patched
+        with tempfile.TemporaryDirectory() as tmp:
+            out = io.StringIO()
+            err = io.StringIO()
+            with redirect_stdout(out), redirect_stderr(err):
+                code = main(["--out", tmp, "--date", "20261010", "--limit", "1", "--qidian", "yuepiao,mm"])
+            text = out.getvalue()
+            errors = err.getvalue()
+            if code == 0 or "Traceback" in errors or "qidian mm failed:" not in errors or "unavailable" not in errors:
+                print("partial board failure was not isolated", file=sys.stderr)
+                return 0
+            if "起点月票榜_20261010.md" not in text or "隔离yuepiao" not in Path(tmp, "起点月票榜_20261010.md").read_text(encoding="utf-8"):
+                print("partial board success was not printed", file=sys.stderr)
+                return 0
+            out = io.StringIO()
+            err = io.StringIO()
+            with redirect_stdout(out), redirect_stderr(err):
+                code = main(["--out", tmp, "--date", "20261010", "--limit", "1", "--qidian", "yuepiao,hotsales"])
+            text = out.getvalue()
+            if code != 0 or "起点月票榜_20261010.md" not in text or "起点畅销榜_20261010.md" not in text or err.getvalue():
+                print("full board success did not exit 0", file=sys.stderr)
+                return 0
+            out = io.StringIO()
+            err = io.StringIO()
+            with redirect_stdout(out), redirect_stderr(err):
+                code = main(["--out", tmp, "--date", "20261010", "--limit", "1", "--qidian", "yuepiao,boom"])
+            errors = err.getvalue()
+            if code == 0 or "Traceback" in errors or "qidian boom failed:" not in errors or "bad book id" not in errors:
+                print("board value error was not isolated", file=sys.stderr)
+                return 0
+            if "起点月票榜_20261010.md" not in out.getvalue():
+                print("board value error dropped the sibling", file=sys.stderr)
+                return 0
+    finally:
+        fetch_qidian_mobile = original
+    return 1
+
+
+def _fanqie_rising_self_test() -> int:
+    from .fanqie import LANDING_SOURCE_URL
+
+    class _Landing:
+        def __init__(self, books: list[dict[str, object]]) -> None:
+            self.books = books
+            self.calls: list[dict[str, object]] = []
+
+        def category_landing(self, category_id: str, **kwargs: object) -> dict[str, object]:
+            self.calls.append({"category_id": category_id, **kwargs})
+            return {"data": {"book_list": self.books}}
+
+    kept = {
+        "book_id": "1",
+        "book_name": "留下",
+        "author": "作者",
+        "abstract": "简介",
+        "creation_status": "1",
+        "word_number": 299999,
+    }
+    paired = {
+        "book_id": "2",
+        "book_name": "双字段留下",
+        "author": "作者",
+        "abstract": "简介",
+        "creationStatus": 1,
+        "word_number": "12万",
+        "wordNumber": 120000,
+    }
+    dropped = [
+        {"book_id": "3", "book_name": "完结", "author": "作者", "abstract": "简介", "creation_status": "0", "word_number": 1000},
+        {"book_id": "4", "book_name": "无状态", "author": "作者", "abstract": "简介", "word_number": 1000},
+        {"book_id": "5", "book_name": "无字数", "author": "作者", "abstract": "简介", "creation_status": 1},
+        {"book_id": "6", "book_name": "万字", "author": "作者", "abstract": "简介", "creation_status": "1", "word_number": "30万"},
+        {"book_id": "7", "book_name": "到顶", "author": "作者", "abstract": "简介", "creation_status": "1", "word_number": 300000},
+        {"book_id": "8", "book_name": "双字段到顶", "author": "作者", "abstract": "简介", "creation_status": "1", "word_number": "29万", "wordNumber": 300000},
+    ]
+    rising = _Landing([kept, paired, *dropped])
+    snapshot = fetch_fanqie_rank("male-rising-dushinaodong", 20, client=rising)
+    names = [item.book_name for item in snapshot.items]
+    if names != ["留下", "双字段留下"]:
+        print("fanqie rising keep/drop failed", file=sys.stderr)
+        return 0
+    if "/rank/" in snapshot.source_url or "new_category/landing" not in snapshot.source_url:
+        print("fanqie source url is still a web rank path", file=sys.stderr)
+        return 0
+    if snapshot.source_url != LANDING_SOURCE_URL:
+        print("fanqie source url drifted", file=sys.stderr)
+        return 0
+    if "new_category/landing" not in render_markdown(snapshot):
+        print("fanqie markdown source missing the landing path", file=sys.stderr)
+        return 0
+    call = rising.calls[0]
+    if "book_status" not in call or "word_number" not in call:
+        print("fanqie rising filters were not sent", file=sys.stderr)
+        return 0
+    hot_books = [{"book_id": "9", "book_name": "热门书", "author": "作者", "abstract": "简介", "creation_status": "0"}]
+    hot = _Landing(hot_books)
+    hot_snapshot = fetch_fanqie_rank("male-hot-xifangqihuan", 5, client=hot)
+    newbook = _Landing([{"book_id": "10", "book_name": "最新书", "author": "作者", "abstract": "简介"}])
+    new_snapshot = fetch_fanqie_rank("male-newbook-xifangqihuan", 5, client=newbook)
+    if hot_snapshot.items[0].book_name != "热门书" or new_snapshot.items[0].book_name != "最新书":
+        print("fanqie hot or newbook dropped a book", file=sys.stderr)
+        return 0
+    for recorded in (hot.calls[0], newbook.calls[0]):
+        if "book_status" in recorded or "word_number" in recorded:
+            print("fanqie hot or newbook sent rising filters", file=sys.stderr)
+            return 0
+    if "/rank/" in hot_snapshot.source_url or "/rank/" in new_snapshot.source_url:
+        print("fanqie hot source url is a web rank path", file=sys.stderr)
+        return 0
+    return 1
 
 
 def _jjwxc_self_test() -> int:
@@ -415,6 +575,213 @@ def _jjwxc_self_test() -> int:
     kept = fetch_jjwxc_rank("natural_609", 800, client=_Pages(full_pages))
     if "后面可能还有" not in " ".join(kept.source_notes) or len(kept.items) != 800:
         print("jjwxc full cap note failed", file=sys.stderr)
+        return 0
+    checks += 1
+
+    from jjwxc_app.book import book_page_url, book_stats_url, parse_book_page, parse_book_stats
+    from jjwxc_app.http import assert_public_book_request
+
+    page_keys = [key for key, _ in parse_qsl(urlparse(book_page_url("3173202")).query)]
+    stats_keys = [key for key, _ in parse_qsl(urlparse(book_stats_url("3173202")).query)]
+    if page_keys != ["novelid"] or stats_keys != ["action", "novelid", "callback"]:
+        print("jjwxc book query names failed", file=sys.stderr)
+        return 0
+    try:
+        book_page_url("12abc")
+    except ValueError:
+        pass
+    else:
+        print("jjwxc book id was accepted", file=sys.stderr)
+        return 0
+    try:
+        assert_public_book_request(book_page_url("1"), {"Cookie": "a"})
+    except ValueError:
+        pass
+    else:
+        print("jjwxc book cookie was accepted", file=sys.stderr)
+        return 0
+    try:
+        assert_public_book_request(book_page_url("1") + "&extra=1", {})
+    except ValueError:
+        pass
+    else:
+        print("jjwxc book extra query was accepted", file=sys.stderr)
+        return 0
+    html = (
+        '<span itemprop="wordCount">451171字</span>'
+        '<span itemprop="collectedCount">1</span>'
+        '<span itemprop="scoreCount">2</span>'
+        '请输入验证码'
+        '<span itemprop="nutritionCount"></span>'
+    )
+    parsed_page = parse_book_page(html)
+    if parsed_page.word_count != "451171" or parsed_page.nutrition_count:
+        print("jjwxc book page parse failed", file=sys.stderr)
+        return 0
+    parsed_stats = parse_book_stats(
+        'jjwxcStats({"collectedCount":"2788810","novelscore":"57,687,396,352",'
+        '"comment_count":"1","nutritionCount":"4675768"})'
+    )
+    if (
+        parsed_stats.favorite_count != "2788810"
+        or parsed_stats.score_count != "57687396352"
+        or parsed_stats.nutrition_count != "4675768"
+    ):
+        print("jjwxc book stats parse failed", file=sys.stderr)
+        return 0
+    try:
+        parse_book_stats("not-json")
+    except ValueError:
+        pass
+    else:
+        print("jjwxc book stats payload was accepted", file=sys.stderr)
+        return 0
+
+    class _Books(_Pages):
+        def __init__(
+            self,
+            pages: dict[int, list[dict[str, str]]],
+            stats: dict[str, str],
+            page_html: str | None = None,
+        ) -> None:
+            super().__init__(pages)
+            self.stats = stats
+            self.page_html = html if page_html is None else page_html
+            self.requested: list[str] = []
+
+        def fetch_public(self, url: str):
+            parsed = urlparse(url)
+            query = dict(parse_qsl(parsed.query, keep_blank_values=True))
+            novel_id = query.get("novelid", "")
+            self.requested.append(novel_id)
+            if novel_id == "2":
+                return type("Response", (), {"status": 200, "text": "访问过于频繁"})()
+            if parsed.path.endswith("/onebook.php"):
+                if list(query) != ["novelid"]:
+                    raise AssertionError("book page query names")
+                return type("Response", (), {"status": 200, "text": self.page_html})()
+            if parsed.path.endswith("/lib/ajax.php"):
+                if list(query) != ["action", "novelid", "callback"]:
+                    raise AssertionError("book stats query names")
+                body = query["callback"] + "(" + json.dumps(self.stats, ensure_ascii=False) + ")"
+                return type("Response", (), {"status": 200, "text": body})()
+            raise AssertionError("book path")
+
+    rich = fetch_jjwxc_rank(
+        "新晋作者榜·衍生",
+        1,
+        client=_Books({0: [_book(1)]}, {
+            "collectedCount": "2788810",
+            "novelscore": "57,687,396,352",
+            "comment_count": "1",
+            "nutritionCount": "4675768",
+        }),
+    )
+    rich_text = render_markdown(rich)
+    if (
+        rich.items[0].word_count_text != "451171"
+        or rich.items[0].extra.get("favorite_count") != "2788810"
+        or rich.items[0].extra.get("nutrition_count") != "4675768"
+        or rich.items[0].extra.get("score_count") != "57687396352"
+        or "字数：451171" not in rich_text
+        or "收藏：2788810" not in rich_text
+        or "营养液：4675768" not in rich_text
+        or "积分：57687396352" not in rich_text
+        or "收藏：[待补]" in rich_text
+        or "作品页补了收藏、营养液、积分、字数" not in rich_text
+        or "getNovelCollectedCount" in rich_text
+        or "channelBody" in rich_text
+    ):
+        print("jjwxc book metrics markdown failed", file=sys.stderr)
+        return 0
+    partial = fetch_jjwxc_rank(
+        "新晋作者榜·衍生",
+        1,
+        client=_Books({0: [_book(1)]}, {
+            "collectedCount": "9",
+            "novelscore": "8",
+            "comment_count": "7",
+        }),
+    )
+    partial_text = render_markdown(partial)
+    if "营养液：[待补]" not in partial_text or "没读全" not in partial_text:
+        print("jjwxc partial book metrics failed", file=sys.stderr)
+        return 0
+    try:
+        parse_book_page("访问过于频繁")
+    except Exception as exc:
+        if "unavailable" not in str(exc):
+            print("jjwxc blocked book page changed", file=sys.stderr)
+            return 0
+    else:
+        print("jjwxc blocked book page was accepted", file=sys.stderr)
+        return 0
+    nested = parse_book_page(
+        '<span itemprop="wordCount">451171<span class="extra">99</span>字</span>'
+        '<span itemprop="collectedCount">10<button>灌溉营养液 3</button></span>'
+        '<span itemprop="scoreCount">20<!--0--></span>'
+        '<div itemprop="wordCount">7<span itemprop="wordCount">8</span></div>'
+        '<span itemprop="nutritionCount" content="">4675</span>'
+        "请输入验证码"
+    )
+    if (
+        nested.word_count != "451171"
+        or nested.favorite_count != "10"
+        or nested.score_count != "20"
+        or nested.nutrition_count != "4675"
+    ):
+        print("jjwxc nested metric digits failed", file=sys.stderr)
+        return 0
+    own_only = parse_book_page('<span itemprop="scoreCount" content="">88</span>')
+    comment_only = parse_book_page('<span itemprop="collectedCount"><!--0--></span>')
+    outer = parse_book_page('<div itemprop="wordCount">7<span itemprop="wordCount">8</span></div>')
+    if own_only.score_count != "88" or comment_only.favorite_count or outer.word_count != "7":
+        print("jjwxc own-text metric failed", file=sys.stderr)
+        return 0
+    comment_html = (
+        '<span itemprop="wordCount">11</span>'
+        '<span itemprop="collectedCount">22</span>'
+        '<span itemprop="scoreCount">33</span>'
+        '<span itemprop="nutritionCount"><!--0--></span>'
+    )
+    comment_rank = fetch_jjwxc_rank(
+        "新晋作者榜·衍生",
+        1,
+        client=_Books({0: [_book(1)]}, {"collectedCount": "22", "novelscore": "33"}, comment_html),
+    )
+    comment_text = render_markdown(comment_rank)
+    if (
+        comment_rank.items[0].extra.get("nutrition_count")
+        or "营养液：[待补]" not in comment_text
+        or "营养液：0" in comment_text
+    ):
+        print("jjwxc comment zero became a count", file=sys.stderr)
+        return 0
+    mixed_client = _Books(
+        {0: [
+            {"novelId": "12abc", "novelName": "坏书", "authorName": "甲"},
+            _book(1),
+            _book(2),
+        ]},
+        {
+            "collectedCount": "2788810",
+            "novelscore": "57,687,396,352",
+            "nutritionCount": "4675768",
+        },
+    )
+    mixed = fetch_jjwxc_rank("新晋作者榜·衍生", 3, client=mixed_client)
+    mixed_text = render_markdown(mixed)
+    if (
+        "12abc" in mixed_client.requested
+        or [item.book_id for item in mixed.items] != ["12abc", "1", "2"]
+        or mixed.items[1].word_count_text != "451171"
+        or mixed.items[0].word_count_text
+        or mixed.items[2].word_count_text
+        or "坏书" not in mixed_text
+        or "字数：451171" not in mixed_text
+        or "没读全" not in mixed_text
+    ):
+        print("jjwxc bad book id dropped the board", file=sys.stderr)
         return 0
     checks += 1
     return checks

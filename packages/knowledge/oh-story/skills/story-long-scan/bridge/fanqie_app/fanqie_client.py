@@ -630,6 +630,8 @@ class FanqieClient:
         limit: int = 10,
         sort_by: int = 24,
         query_gender: int = 1,
+        book_status: int | str | None = None,
+        word_number: int | str | None = None,
     ) -> dict:
         if not category_id.strip():
             raise ValueError("category_id cannot be empty")
@@ -639,6 +641,10 @@ class FanqieClient:
             f"category_id={urllib.parse.quote(category_id, safe='')}&offset={offset}&limit={limit}"
             f"&sort_by={sort_by}&source=front_category&query_gender={query_gender}&genre_type=0"
         )
+        if book_status is not None:
+            extra += f"&book_status={urllib.parse.quote(str(book_status), safe='')}"
+        if word_number is not None:
+            extra += f"&word_number={urllib.parse.quote(str(word_number), safe='')}"
         return self._signed_get(CATEGORY_LANDING_PATHS, extra, "category_landing")
 
     def category_landing_results(self, category_id: str, *, limit: int = 10, **kwargs: object) -> list[RankItem]:

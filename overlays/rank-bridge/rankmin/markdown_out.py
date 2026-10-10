@@ -75,10 +75,10 @@ def _jjwxc_block(item: RankItem) -> list[str]:
     lines = [f"## #{item.rank_position} {item.book_name}"]
     if meta:
         lines.append(f"*{meta}*")
-    lines.append("**字数：[待补]**")
-    lines.append("**收藏：[待补]**")
-    lines.append("**营养液：[待补]**")
-    lines.append("**积分：[待补]**")
+    lines.append(f"**字数：{_blank(item.word_count_text)}**")
+    lines.append(f"**收藏：{_blank(str(item.extra.get('favorite_count') or ''))}**")
+    lines.append(f"**营养液：{_blank(str(item.extra.get('nutrition_count') or ''))}**")
+    lines.append(f"**积分：{_blank(str(item.extra.get('score_count') or ''))}**")
     if item.book_url:
         lines.append(f"[作品页]({item.book_url})")
     lines.extend(["", "---", ""])

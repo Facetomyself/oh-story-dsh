@@ -181,27 +181,30 @@ Agent 过程通过右侧动态栏或官方 Chat 查看。禁止启动独立 Dash
 基于可核验样本识别长篇网文趋势。不提取登录凭据，也不绕过验证码、访问控制或站点限制。
 起点、番茄、刺猬猫和晋江只跑本技能目录的 bridge/rankmin_cli.py。起点男频是匿名 HTTP，
 不带 Cookie，不进详情页，不保存原始 HTML。番茄使用同目录的 bridge/fanqie_app，
-取分类热门和分类最新的明文。刺猬猫使用同目录的 bridge/ciweimao_app
+取分类热门、分类最新，以及按题材的新书（连载、30 万字以下、按热度）的明文。没有跨题材书库列表，不要抓 library 页。刺猬猫使用同目录的 bridge/ciweimao_app
 协议客户端打 App 排行。晋江使用同目录的 bridge/jjwxc_app
-书店榜协议：72 个频道分页，按页继续直到短页、重复页或 40 页上限。不下章节。不要启动 CDP。
+书店榜协议：72 个频道分页，按页继续直到短页、重复页或 40 页上限。每本再读公开作品页的收藏、营养液、积分和字数。不下章节。不要启动 CDP。
 
 1. 明确平台、频道和题材方向；只有答案会改变采样范围时才问一个问题。
 2. 数据来源依次为：bridge/rankmin_cli.py 写出的榜单、用户提供的数据、
-   当前 DSH Preset 可见的网页工具、references/genre-trends.md 中的历史趋势。
+   references/genre-trends.md 中的历史趋势。
+   某一榜失败时，不要打开网页榜、library 页或作品页去补。
    无法获取实时数据时必须明确标为历史假设。
 3. 起点默认在本技能目录执行
    python3 bridge/rankmin_cli.py --out {工作区}/扫榜/{YYYYMMDD} --limit 20 --qidian yuepiao,hotsales,readindex。
    番茄把 --fanqie male-hot-xifangqihuan,male-newbook-xifangqihuan,female-hot-gufengshiqing,female-newbook-gufengshiqing
-   加到同一条命令。刺猬猫再加 --ciweimao fans_value:week,favor:week,tsukkomi:week,yp_new:month。
+   加到同一条命令。要看正在起量的新书，把 male-rising-<题材>,female-rising-<题材> 加在同一条 --fanqie 后面，不要写进默认的四个分类。刺猬猫再加 --ciweimao fans_value:week,favor:week,tsukkomi:week,yp_new:month。
    晋江再加 --jjwxc 月度排行榜·言情,月度排行榜·纯爱,新晋作者榜·言情,完结金榜·言情。
    作者点名的榜换成别名，不要一次扫完全部题材。晋江要超过 20 本时提高 --limit，
    客户端会继续翻页，直到本数够、短页或重复页。到了 40 页上限，末页仍满且本数不够就失败；
    本数已经够时文件会写明后面可能还有。作者积分榜和 TOP100 没有频道分页。
+   晋江文件里的收藏、营养液、积分和字数来自公开作品页，没读到的标 [待补]。
 4. 七猫本版本没有 provider。不要启动 CDP，也不要把旧命令改回去。
    作者没提供榜单时，结论不含七猫。刺猬猫没有账号环境变量时由 ciweimao_app 自己注册游客，
    会话写在运行用户的 ~/.dsh/ciweimao-guest.json。出口用 CIWEIMAO_PROXY_URL，或 ~/.dsh/ciweimao/ 里的快代理密钥。不要读 tokens.json，不要把会话或代理地址写进报告。
-5. 每次扫榜新建 扫榜/{YYYYMMDD}/（同日再扫加 -2）。只读这次写出的榜单 markdown。
-   退出码 2 就是该榜没拿到：不要编造名次，不要改走 CDP。起点女生精选榜和女生月票榜
+5. 每次扫榜新建 扫榜/{YYYYMMDD}/（同日再扫加 -2）。stdout 打出的路径就是这次拿到的榜，先读这些文件。
+   任一榜失败则退出码 2，stderr 会点名失败的榜。不要编造名次，不要打开网页榜、library 页或作品页去补。
+   不要把 sanjiang、collect、女生精选或女生月票写进命令。起点女生精选榜和女生月票榜
    当前没有公开列表，报 unavailable 时结论不含这两条。番茄 hot 是分类热门，
    newbook 是分类最新。缺掉的书名或刺猬猫字段名照命令原文写。
 6. 每个样本记录来源 URL、采集日期、榜单口径、有效条目数、缺失字段和异常项；
@@ -215,8 +218,8 @@ Agent 过程通过右侧动态栏或官方 Chat 查看。禁止启动独立 Dash
    作为「扫榜结论」一节，作者要选题时再写「推荐选题」一节。story-long-write 开书时
    从这份文件接上，所以结论要落盘，不只留在对话里。
 
-rankmin 失败、当前 Preset 没有网页能力、且用户也未提供样本时，使用内置参考完成方法论分析，
-并列出仍需核验的榜单；不要启动 CDP、独立浏览器或并行运行时。`,
+有榜失败且用户也未提供样本时，已写出的榜单照常读取；没拿到的榜使用内置参考完成方法论分析，
+并列出仍需核验的榜单。不要打开网页榜、library 页或作品页去补，也不要启动 CDP、独立浏览器或并行运行时。`,
   "story-short-scan": `# story-short-scan — DSH 原生短篇扫榜
 
 基于可核验样本识别短篇市场的情绪、题材与传播信号，不运行打包脚本、不读取 Cookie

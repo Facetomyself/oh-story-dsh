@@ -354,8 +354,8 @@
     },
     {
       "path": "skills/story-long-scan/SKILL.md",
-      "sha256": "2e68c2eafc85d919184719903fb50a7af84cc975892738a99f80f1944572aa94",
-      "bytes": 12660
+      "sha256": "6e2a147dd14ac709a0c253aa8b6ee12e5e8a88e801353969bfb1923b76851617",
+      "bytes": 13550
     },
     {
       "path": "skills/story-long-scan/bridge/ciweimao_app/__init__.py",
@@ -414,8 +414,8 @@
     },
     {
       "path": "skills/story-long-scan/bridge/fanqie_app/fanqie_client.py",
-      "sha256": "6f5f11852d4928ab8a93bdaae5237e2adf5281a142daaea19a3064e3d7f6d084",
-      "bytes": 36140
+      "sha256": "b943c8f2b6a4bd062c18a4cc447db9178cd1de9f6a611559d4767fa8044858a4",
+      "bytes": 36480
     },
     {
       "path": "skills/story-long-scan/bridge/fanqie_app/fanqie_pure.py",
@@ -424,13 +424,18 @@
     },
     {
       "path": "skills/story-long-scan/bridge/jjwxc_app/__init__.py",
-      "sha256": "4e8bd99f5aef1c853f39edcf1859e11931d0538dcec0548d16cb448860be4e3b",
-      "bytes": 624
+      "sha256": "70400546d2e8b0fc805da754688fec429e9551765aa11ba39cf85c5efe9ed65a",
+      "bytes": 648
+    },
+    {
+      "path": "skills/story-long-scan/bridge/jjwxc_app/book.py",
+      "sha256": "44320bd725de0f3d368d4da2546fd74822fee84a719c667992f366ab66bce46d",
+      "bytes": 7154
     },
     {
       "path": "skills/story-long-scan/bridge/jjwxc_app/http.py",
-      "sha256": "6a4e2206a0dd43f4645998d11881bd88c2d19f06610ee35d5a1964c8e62c465d",
-      "bytes": 7009
+      "sha256": "070ec9d83532f0c7dc332b0b6db81e231c3650b88df0e885ef91635cfdb978df",
+      "bytes": 11542
     },
     {
       "path": "skills/story-long-scan/bridge/jjwxc_app/rank.py",
@@ -444,8 +449,8 @@
     },
     {
       "path": "skills/story-long-scan/bridge/rankmin/__main__.py",
-      "sha256": "da5d59812b81136ee5276ee031f6af97f2ad520cc6b0957bcdc56070b23681f3",
-      "bytes": 18291
+      "sha256": "2ab1a86de8955ccd86645f4dd9c3d3edbd47523767c01da14e7ed3d97f354c5a",
+      "bytes": 33996
     },
     {
       "path": "skills/story-long-scan/bridge/rankmin/ciweimao.py",
@@ -464,8 +469,8 @@
     },
     {
       "path": "skills/story-long-scan/bridge/rankmin/fanqie.py",
-      "sha256": "d73d5e2cc27f43ae35e896178fa9207ae86cacd9d9a9ab037a369e74703a2db5",
-      "bytes": 16984
+      "sha256": "78bc51e36cc40d35ee0b05a762997868f940e33dd8d64c7ff4d8e728b13c7994",
+      "bytes": 20071
     },
     {
       "path": "skills/story-long-scan/bridge/rankmin/http_client.py",
@@ -474,13 +479,13 @@
     },
     {
       "path": "skills/story-long-scan/bridge/rankmin/jjwxc.py",
-      "sha256": "2adf5f70c98137f9ad98da5fc4537420068ae999bfcfb5c47a55f39a987110b5",
-      "bytes": 5992
+      "sha256": "713476e8b9876c24ff49a1c91d8b7ec9878c8a3f7dc13f83274bbf7cc4626fb9",
+      "bytes": 8388
     },
     {
       "path": "skills/story-long-scan/bridge/rankmin/markdown_out.py",
-      "sha256": "d9e1f852533e51a8378b918c860d6be5530d606e5628ee4adda91cd2a4d30bd2",
-      "bytes": 4996
+      "sha256": "37c9396f5bb138e73e596392a46e8621771515884775121879575eb9a245488a",
+      "bytes": 5155
     },
     {
       "path": "skills/story-long-scan/bridge/rankmin/qidian.py",
@@ -509,18 +514,18 @@
     },
     {
       "path": "skills/story-long-scan/references/platform-fanqie.md",
-      "sha256": "bad2a232677f858ff68741166f9874fdc375b9581ea4a4b980cb86516a9c6e9f",
-      "bytes": 3082
+      "sha256": "af9a6a38d1223b50105a55a6d5dd47fd7c130a1a09649c0fd6253dfa9d44eae7",
+      "bytes": 3783
     },
     {
       "path": "skills/story-long-scan/references/platform-jjwxc.md",
-      "sha256": "ef858ef7bdfcc8ee7dd19f8f67a21c127eadf1a226aedca9eb37b52532449a19",
-      "bytes": 1879
+      "sha256": "934a7494a47a849f25716c77f0ff9d9cc0e84ac6471be6d555922bc930d83263",
+      "bytes": 2032
     },
     {
       "path": "skills/story-long-scan/references/platform-qidian.md",
-      "sha256": "ac59c69812766a320e32e6aa35a3e55fab8f1a1cfda97f9f24ad60c5c5f157c4",
-      "bytes": 2145
+      "sha256": "7c6407e467cf602446e222b948d8041f7b07f0f906dbad61cb21fd9e9b6e72ef",
+      "bytes": 2416
     },
     {
       "path": "skills/story-long-scan/references/platform-qimao.md",

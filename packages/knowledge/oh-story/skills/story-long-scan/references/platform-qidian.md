@@ -4,7 +4,7 @@
 
 ## 榜单与命令
 
-在技能目录执行 `python3 bridge/rankmin_cli.py --out {输出目录} --limit 20 --qidian {榜单别名}`。别名用下表的 `--type` 列。不要全采，不要进详情页，不要 CDP。
+在技能目录执行 `python3 bridge/rankmin_cli.py --out {输出目录} --limit 20 --qidian {榜单别名}`。可跑的别名是 yuepiao、hotsales、readindex、newfans、recom、vipup、signnewbook、pubnewbook、newsign、newauthor。不要把 sanjiang、collect、女生精选或女生月票写进命令。不要全采，不要进详情页，不要打开网页榜去补失败的榜，不要 CDP。
 
 | 榜单 | --type | URL | 看什么 |
 |------|--------|-----|--------|
@@ -12,11 +12,11 @@
 | 签约作者新书榜 | signnewbook | qidian.com/rank/signnewbook/ | 已签约作者新作风向 |
 | 公众作者新书榜 | pubnewbook | qidian.com/rank/pubnewbook/ | 发现潜力作者 |
 | 新人作者新书榜 | newauthor | qidian.com/rank/newauthor/ | 新人赛道 |
-| 三江推荐 | sanjiang | qidian.com/sanjiang/ | 编辑精选，按周分组（非 /rank/ 路径） |
+| 三江推荐 | 解析器不接受，不要写入命令 | qidian.com/sanjiang/ | 编辑精选，按周分组（非 /rank/ 路径） |
 | 月票榜 | yuepiao | qidian.com/rank/yuepiao/ | 付费认可度最高 |
 | 畅销榜 | hotsales | qidian.com/rank/hotsales/ | 真金白银投票 |
 | 阅读指数榜 | readindex | qidian.com/rank/readindex/ | 阅读量综合 |
-| 收藏榜 | collect | qidian.com/rank/collect/ | 读者关注热度 |
+| 收藏榜 | 解析器不接受，不要写入命令 | qidian.com/rank/collect/ | 读者关注热度 |
 | 原创推荐榜 | recom | qidian.com/rank/recom/ | 平台推荐 |
 
 默认组合：新人签约新书榜 + 签约作者新书榜 + 月票榜 + 畅销榜。文件名 `起点{榜单}_{YYYYMMDD}.md`。
