@@ -125,9 +125,11 @@ const replacements: readonly Replacement[] = [
   },
   {
     path: "skills/story-long-scan/SKILL.md",
-    to: `| 五份平台参考（链接见 Phase 2） | 起点、番茄、刺猬猫读「分析维度」和字段；七猫、晋江本版本没有 provider，不执行其中的采集命令 |
+    to: `| 五份平台参考（链接见 Phase 2） | 起点、番茄、刺猬猫、晋江读「分析维度」和字段；七猫本版本没有 provider，不执行其中的采集命令 |
+| [bridge/rankmin_cli.py](bridge/rankmin_cli.py) | 起点移动榜、番茄榜单页、刺猬猫 App 排行、晋江书店榜。\`--self-test\` 不联网。失败退出码 2，不编造榜单 |`,
+    from: [`| 五份平台参考（链接见 Phase 2） | 起点、番茄、刺猬猫读「分析维度」和字段；七猫、晋江本版本没有 provider，不执行其中的采集命令 |
 | [bridge/rankmin_cli.py](bridge/rankmin_cli.py) | 起点移动榜、番茄榜单页、刺猬猫 App 排行。\`--self-test\` 不联网。失败退出码 2，不编造榜单 |`,
-    from: [`| 五份平台参考（链接见 Phase 2） | 起点、番茄读「分析维度」和字段；七猫、晋江、刺猬猫本版本没有 provider，不执行其中的采集命令 |
+      `| 五份平台参考（链接见 Phase 2） | 起点、番茄读「分析维度」和字段；七猫、晋江、刺猬猫本版本没有 provider，不执行其中的采集命令 |
 | [bridge/rankmin_cli.py](bridge/rankmin_cli.py) | 起点移动榜和番茄榜单页。\`--self-test\` 不联网。失败退出码 2，不编造榜单 |`,
       `| 五份平台参考（链接见「脚本采集模式」第 1 步） | 「确定数据来源」：只读所选平台那份——榜单网址、命令、字段、故障排查、平台分析维度 |
 | [scripts/aggregate-rank.js](scripts/aggregate-rank.js) | 把输出目录里的原始榜单聚合成短表（\`--out\` 落盘，\`--sample\` 抽原始条目，\`--json\` 机读），主会话只读它 |
@@ -173,8 +175,11 @@ const replacements: readonly Replacement[] = [
   },
   {
     path: "skills/story-long-scan/references/platform-jjwxc.md",
-    to: "作者选了晋江才读本文。本版本没有晋江 provider。不要启动 CDP，也不要把下文命令改回采集脚本。作者没有提供榜单时，结论不含晋江。分析维度只作历史对照。",
-    from: ["作者选了晋江才读本文。需先用 `/browser-cdp` 启动 Chrome。脚本两步走：① 列表页 `topten.php` 取频道分组与书名/作者，从书名链接取 `novelid`（排除「X 向《书名》投了 Y」霸王票记录）；② 进 `onebook.php?novelid=` 详情页补采核心指标。晋江是 gb18030 编码，脚本已按此解码；详情指标公开，无需登录。"]
+    to: "作者选了晋江才读本文。采集走本技能 `bridge/jjwxc_app` 的书店榜协议，经 `bridge/rankmin_cli.py` 写榜。72 个频道分页都能拉，默认只拉作者点名的榜。作者积分榜和 TOP100 没有频道分页。不要启动 CDP，不要进详情页，不要下章节。",
+    from: [
+      "作者选了晋江才读本文。本版本没有晋江 provider。不要启动 CDP，也不要把下文命令改回采集脚本。作者没有提供榜单时，结论不含晋江。分析维度只作历史对照。",
+      "作者选了晋江才读本文。需先用 `/browser-cdp` 启动 Chrome。脚本两步走：① 列表页 `topten.php` 取频道分组与书名/作者，从书名链接取 `novelid`（排除「X 向《书名》投了 Y」霸王票记录）；② 进 `onebook.php?novelid=` 详情页补采核心指标。晋江是 gb18030 编码，脚本已按此解码；详情指标公开，无需登录。"
+    ]
   },
   {
     path: "skills/story-long-scan/references/platform-ciweimao.md",
@@ -192,8 +197,12 @@ const replacements: readonly Replacement[] = [
   },
   {
     path: "skills/story-long-scan/references/platform-jjwxc.md",
-    to: "本版本不执行采集命令。上面的 URL 只说明榜单曾经在哪。",
-    from: ["```bash\nnode scripts/jjwxc-rank-scraper.js --type 12 --outdir {输出目录}        # 列表+详情（默认每频道前 10，详情上限 100）\nnode scripts/jjwxc-rank-scraper.js --type 12 --top 15 --detail-limit 60  # 调整每频道本数/详情总量\nnode scripts/jjwxc-rank-scraper.js --type 12 --list-only                 # 只采列表（快，无核心指标）\n```"]
+    to: "在技能目录执行 `python3 bridge/rankmin_cli.py --out {输出目录} --limit 20 --jjwxc 月度排行榜·言情,月度排行榜·纯爱,新晋作者榜·言情,完结金榜·言情`。别名是「榜名·频道」。`--limit` 大于 20 时按页继续，直到本数够、短页或重复页。到了 40 页上限，末页仍满且本数不够时，这次榜失败。本数已经够但末页仍满时，文件会写明后面可能还有，不要把这一页当成榜尾。不要一次扫完全部频道，不要进详情页，不要下章节。",
+    from: [
+      "在技能目录执行 `python3 bridge/rankmin_cli.py --out {输出目录} --limit 20 --jjwxc 月度排行榜·言情,月度排行榜·纯爱,新晋作者榜·言情,完结金榜·言情`。别名是「榜名·频道」。`--limit` 大于 20 时按页继续，直到本数够、短页、重复页，或 40 页上限。上限处末页仍满则这次榜失败，不要把截断当成榜尾。不要一次扫完全部频道，不要进详情页，不要下章节。",
+      "本版本不执行采集命令。上面的 URL 只说明榜单曾经在哪。",
+      "```bash\nnode scripts/jjwxc-rank-scraper.js --type 12 --outdir {输出目录}        # 列表+详情（默认每频道前 10，详情上限 100）\nnode scripts/jjwxc-rank-scraper.js --type 12 --top 15 --detail-limit 60  # 调整每频道本数/详情总量\nnode scripts/jjwxc-rank-scraper.js --type 12 --list-only                 # 只采列表（快，无核心指标）\n```"
+    ]
   },
   {
     path: "skills/story-long-scan/references/platform-ciweimao.md",
@@ -228,8 +237,22 @@ const replacements: readonly Replacement[] = [
   },
   {
     path: "skills/story-long-scan/references/platform-jjwxc.md",
-    to: "作者自己提供的晋江样本如果没有收藏、营养液或积分、字数，标成数据不够，不要为此去抓详情页。",
-    from: ["必须有详情页核心指标（收藏、营养液或积分、字数）：用了 `--list-only` 或文件头标 `[仅列表-无核心指标]` 的数据撑不起下面的分析，视为不合格，要重采。"]
+    to: "这份榜有频道、排名、书名、作者和作品页。收藏、营养液、积分、字数不在接口里，文件里标 [待补]；作者另给的样本如果没有这些数，标成数据不够。不要为此去抓详情页。",
+    from: [
+      "频道（聚合时当题材）、排名、书名、作者、novelid、收藏数（核心，聚合的热度口径）、营养液、积分、字数、状态、作品页链接。App 榜给出排名、书名、作者和作品页。收藏、营养液、积分、字数不在这份榜上，文件里标 [待补]。作者自己提供的样本如果没有这些数，标成数据不够。不要为此去抓详情页。",
+      "作者自己提供的晋江样本如果没有收藏、营养液或积分、字数，标成数据不够，不要为此去抓详情页。",
+      "必须有详情页核心指标（收藏、营养液或积分、字数）：用了 `--list-only` 或文件头标 `[仅列表-无核心指标]` 的数据撑不起下面的分析，视为不合格，要重采。"
+    ]
+  },
+  {
+    path: "skills/story-long-scan/references/platform-jjwxc.md",
+    to: "别名是「榜名·频道」。12 个父榜各有言情、纯爱、衍生、无CP+、百合、原创：月度排行榜、季度排行榜、半年排行榜、新晋作者榜、长生殿排行榜、勤奋指数榜、完结金榜、字数榜、霸王票总榜、读者栽培榜、驻站作者榜、总分榜。作者积分榜和 TOP100 只有目录预览，不能当频道榜拉。",
+    from: ["URL `jjwxc.net/topten.php?orderstr={榜单ID}&t={频道ID}`（t=0 全站）。orderstr：收入金榜 12 / 月榜 7 / 季度榜 8 / 完结金榜 14 / 新手金榜 15 / 千字金榜 17。"]
+  },
+  {
+    path: "skills/story-long-scan/references/platform-jjwxc.md",
+    to: "默认组合：月度排行榜的言情和纯爱、新晋作者榜·言情、完结金榜·言情。不要一次扫完全部频道。",
+    from: ["默认组合：收入金榜 + 月榜。"]
   },
   {
     path: "skills/story-long-scan/references/platform-fanqie.md",
@@ -238,8 +261,9 @@ const replacements: readonly Replacement[] = [
   },
   {
     path: "skills/story-short-scan/SKILL.md",
-    to: "**核心信念：短篇市场变化快，题材信号有效期短。** 扫榜报告必须标注样本日期、趋势可信度和下次重新扫榜的时间。长篇起点、番茄和刺猬猫不在这里采集，走 story-long-scan 的 `bridge/rankmin_cli.py`。",
+    to: "**核心信念：短篇市场变化快，题材信号有效期短。** 扫榜报告必须标注样本日期、趋势可信度和下次重新扫榜的时间。长篇起点、番茄、刺猬猫和晋江不在这里采集，走 story-long-scan 的 `bridge/rankmin_cli.py`。",
     from: [
+      "**核心信念：短篇市场变化快，题材信号有效期短。** 扫榜报告必须标注样本日期、趋势可信度和下次重新扫榜的时间。长篇起点、番茄和刺猬猫不在这里采集，走 story-long-scan 的 `bridge/rankmin_cli.py`。",
       "**核心信念：短篇市场变化快，题材信号有效期短。** 扫榜报告必须标注样本日期、趋势可信度和下次重新扫榜的时间。长篇起点和番茄不在这里采集，走 story-long-scan 的 `bridge/rankmin_cli.py`。",
       "**核心信念：短篇市场变化快，题材信号有效期短。** 扫榜报告必须标注样本日期、趋势可信度和下次重新扫榜的时间。"
     ]
@@ -312,6 +336,9 @@ async function copyRankBridge(): Promise<void> {
   const fanqieTarget = join(ohStoryRoot, "skills/story-long-scan/bridge/fanqie_app");
   await rm(fanqieTarget, { recursive: true, force: true });
   await cp(join(rankBridgeRoot, "fanqie_app"), fanqieTarget, { recursive: true });
+  const jjwxcTarget = join(ohStoryRoot, "skills/story-long-scan/bridge/jjwxc_app");
+  await rm(jjwxcTarget, { recursive: true, force: true });
+  await cp(join(rankBridgeRoot, "jjwxc_app"), jjwxcTarget, { recursive: true });
 }
 
 async function spliceLongScanPhase2(): Promise<void> {

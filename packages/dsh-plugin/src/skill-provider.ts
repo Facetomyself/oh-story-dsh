@@ -179,10 +179,11 @@ Agent 过程通过右侧动态栏或官方 Chat 查看。禁止启动独立 Dash
   "story-long-scan": `# story-long-scan — DSH 原生长篇扫榜
 
 基于可核验样本识别长篇网文趋势。不提取登录凭据，也不绕过验证码、访问控制或站点限制。
-起点、番茄和刺猬猫只跑本技能目录的 bridge/rankmin_cli.py。起点男频是匿名 HTTP，
+起点、番茄、刺猬猫和晋江只跑本技能目录的 bridge/rankmin_cli.py。起点男频是匿名 HTTP，
 不带 Cookie，不进详情页，不保存原始 HTML。番茄使用同目录的 bridge/fanqie_app，
 取分类热门和分类最新的明文。刺猬猫使用同目录的 bridge/ciweimao_app
-协议客户端打 App 排行。不下章节。不要启动 CDP。
+协议客户端打 App 排行。晋江使用同目录的 bridge/jjwxc_app
+书店榜协议：72 个频道分页，按页继续直到短页、重复页或 40 页上限。不下章节。不要启动 CDP。
 
 1. 明确平台、频道和题材方向；只有答案会改变采样范围时才问一个问题。
 2. 数据来源依次为：bridge/rankmin_cli.py 写出的榜单、用户提供的数据、
@@ -192,9 +193,12 @@ Agent 过程通过右侧动态栏或官方 Chat 查看。禁止启动独立 Dash
    python3 bridge/rankmin_cli.py --out {工作区}/扫榜/{YYYYMMDD} --limit 20 --qidian yuepiao,hotsales,readindex。
    番茄把 --fanqie male-hot-xifangqihuan,male-newbook-xifangqihuan,female-hot-gufengshiqing,female-newbook-gufengshiqing
    加到同一条命令。刺猬猫再加 --ciweimao fans_value:week,favor:week,tsukkomi:week,yp_new:month。
-   作者点名的榜换成别名，不要一次扫完全部题材。
-4. 七猫、晋江本版本没有 provider。不要启动 CDP，也不要把旧命令改回去。
-   作者没提供榜单时，结论不含这些平台。刺猬猫没有账号环境变量时由 ciweimao_app 自己注册游客，
+   晋江再加 --jjwxc 月度排行榜·言情,月度排行榜·纯爱,新晋作者榜·言情,完结金榜·言情。
+   作者点名的榜换成别名，不要一次扫完全部题材。晋江要超过 20 本时提高 --limit，
+   客户端会继续翻页，直到本数够、短页或重复页。到了 40 页上限，末页仍满且本数不够就失败；
+   本数已经够时文件会写明后面可能还有。作者积分榜和 TOP100 没有频道分页。
+4. 七猫本版本没有 provider。不要启动 CDP，也不要把旧命令改回去。
+   作者没提供榜单时，结论不含七猫。刺猬猫没有账号环境变量时由 ciweimao_app 自己注册游客，
    会话写在运行用户的 ~/.dsh/ciweimao-guest.json。出口用 CIWEIMAO_PROXY_URL，或 ~/.dsh/ciweimao/ 里的快代理密钥。不要读 tokens.json，不要把会话或代理地址写进报告。
 5. 每次扫榜新建 扫榜/{YYYYMMDD}/（同日再扫加 -2）。只读这次写出的榜单 markdown。
    退出码 2 就是该榜没拿到：不要编造名次，不要改走 CDP。起点女生精选榜和女生月票榜
@@ -216,7 +220,7 @@ rankmin 失败、当前 Preset 没有网页能力、且用户也未提供样本�
   "story-short-scan": `# story-short-scan — DSH 原生短篇扫榜
 
 基于可核验样本识别短篇市场的情绪、题材与传播信号，不运行打包脚本、不读取 Cookie
-或 token，也不绕过验证码、登录或访问控制。长篇起点、番茄和刺猬猫不在这里采集，走 story-long-scan 的 bridge/rankmin_cli.py。
+或 token，也不绕过验证码、登录或访问控制。长篇起点、番茄、刺猬猫和晋江不在这里采集，走 story-long-scan 的 bridge/rankmin_cli.py。
 
 1. 明确平台与方向；只有答案会改变采样范围时才问一个问题。
 2. 数据来源依次为：用户提供的数据或链接、当前 DSH Preset 可见的网页工具、

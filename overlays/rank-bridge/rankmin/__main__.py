@@ -59,8 +59,17 @@ def _split(raw: str, defaults: tuple[str, ...]) -> list[str]:
     return [part.strip() for part in raw.split(",") if part.strip()]
 
 
-def _run_fetch(out_dir: Path, day: str, qidian: str, fanqie: str, ciweimao: str, limit: int) -> int:
+def _run_fetch(
+    out_dir: Path,
+    day: str,
+    qidian: str,
+    fanqie: str,
+    ciweimao: str,
+    jjwxc: str,
+    limit: int,
+) -> int:
     from .ciweimao import fetch_ciweimao_rank
+    from .jjwxc import fetch_jjwxc_rank
 
     wrote: list[Path] = []
     try:
@@ -73,11 +82,14 @@ def _run_fetch(out_dir: Path, day: str, qidian: str, fanqie: str, ciweimao: str,
         for category in _split(ciweimao, ()) if ciweimao else []:
             snapshot = fetch_ciweimao_rank(category, limit)
             wrote.append(write_snapshot(snapshot, out_dir, day))
+        for category in _split(jjwxc, ()) if jjwxc else []:
+            snapshot = fetch_jjwxc_rank(category, limit)
+            wrote.append(write_snapshot(snapshot, out_dir, day))
     except RankFetchError as exc:
         print(str(exc), file=sys.stderr)
         return 2
     if not wrote:
-        print("name --qidian, --fanqie, or --ciweimao", file=sys.stderr)
+        print("name --qidian, --fanqie, --ciweimao, or --jjwxc", file=sys.stderr)
         return 2
     for path in wrote:
         print(path)
@@ -237,8 +249,175 @@ def self_test() -> int:
         print("blank ciweimao title was kept", file=sys.stderr)
         return 2
     checks += 1
+    jjwxc_checks = _jjwxc_self_test()
+    if jjwxc_checks == 0:
+        return 2
+    checks += jjwxc_checks
     print(f"rankmin self-test ok ({checks})")
     return 0
+
+
+def _jjwxc_self_test() -> int:
+    import json
+    from urllib.parse import parse_qsl, urlparse
+
+    bridge = Path(__file__).resolve().parents[1]
+    if str(bridge) not in sys.path:
+        sys.path.insert(0, str(bridge))
+    try:
+        from jjwxc_app.http import build_android_headers
+        from jjwxc_app.rank import (
+            INDEX_ONLY_BOARDS,
+            RANK_BOARD_NAMES,
+            RANK_BOARDS,
+            build_rank_index_url,
+            build_rank_url,
+            fetch_rank_pages,
+            parse_rank_page,
+        )
+    except ModuleNotFoundError as exc:
+        print(f"jjwxc missing module: {exc.name}", file=sys.stderr)
+        return 0
+    checks = 0
+    if len(RANK_BOARDS) != 72 or len(RANK_BOARD_NAMES) != 72:
+        print("jjwxc catalog size failed", file=sys.stderr)
+        return 0
+    if RANK_BOARD_NAMES.get("natural_609") != "新晋作者榜·衍生":
+        print("jjwxc label failed", file=sys.stderr)
+        return 0
+    if set(INDEX_ONLY_BOARDS) != {"作者积分榜", "TOP100"}:
+        print("jjwxc index-only boards failed", file=sys.stderr)
+        return 0
+    checks += 1
+    rank_keys = [key for key, _ in parse_qsl(urlparse(build_rank_url("natural_609")).query)]
+    if rank_keys != ["channelBody"]:
+        print("jjwxc query name failed", file=sys.stderr)
+        return 0
+    for version_first in (False, True):
+        index_keys = [key for key, _ in parse_qsl(urlparse(build_rank_index_url(version_first=version_first)).query)]
+        if set(index_keys) != {"channel", "version"} or "channelBody" in index_keys:
+            print("jjwxc index query names failed", file=sys.stderr)
+            return 0
+    checks += 1
+    header_names = {key.lower() for key in build_android_headers()}
+    if header_names & {"cookie", "token", "appdevice", "smdeviceid"}:
+        print("jjwxc forbidden header present", file=sys.stderr)
+        return 0
+    checks += 1
+    parsed = parse_rank_page({
+        "code": "200",
+        "data": {
+            "channelRule": {},
+            "channelRuleDown": {},
+            "channelid": "natural_609",
+            "natural_rank_id": ["one", "two", "three"],
+            "data": [{
+                "novelId": "1",
+                "novelName": "书甲",
+                "authorName": "作者甲",
+            }],
+        },
+    })
+    if parsed.channel_name != "新晋作者榜·衍生" or parsed.books[0].novel_name != "书甲":
+        print("jjwxc captured shape parse failed", file=sys.stderr)
+        return 0
+    direct = parse_rank_page({
+        "code": 200,
+        "data": {"natural_0": [{"novelId": "2", "novelName": "书乙", "authorName": "作者乙"}]},
+    })
+    if direct.channel_name != "natural_0":
+        print("jjwxc unknown board label failed", file=sys.stderr)
+        return 0
+    try:
+        parse_rank_page({"code": "500", "data": []})
+    except ValueError:
+        checks += 1
+    else:
+        print("jjwxc bad code was accepted", file=sys.stderr)
+        return 0
+
+    class _Pages:
+        def __init__(self, pages: dict[int, list[dict[str, str]]]) -> None:
+            self.pages = pages
+            self.offsets: list[int] = []
+
+        def fetch(self, url: str, headers: dict[str, str] | None = None):
+            del headers
+            query = dict(parse_qsl(urlparse(url).query, keep_blank_values=True))
+            if list(query) != ["channelBody"]:
+                raise AssertionError("query name")
+            body = json.loads(query["channelBody"])
+            _board, page = next(iter(body.items()))
+            offset = int(page["offset"])
+            self.offsets.append(offset)
+            payload = {"code": "200", "data": { _board: self.pages.get(offset, []) }}
+            return type("Response", (), {"status": 200, "text": json.dumps(payload, ensure_ascii=False)})()
+
+    def _book(novel_id: int) -> dict[str, str]:
+        return {"novelId": str(novel_id), "novelName": f"书{novel_id}", "authorName": "作者"}
+
+    short = _Pages({0: [_book(i) for i in range(1, 21)], 20: [_book(i) for i in range(21, 24)]})
+    paged = fetch_rank_pages("natural_609", max_pages=5, client=short)
+    if paged.stop_reason != "short" or len(paged.books) != 23 or short.offsets != [0, 20]:
+        print("jjwxc short page failed", file=sys.stderr)
+        return 0
+    repeated = _Pages({0: [_book(i) for i in range(1, 21)], 20: [_book(i) for i in range(1, 21)]})
+    duplicate = fetch_rank_pages("natural_609", max_pages=4, client=repeated)
+    if duplicate.stop_reason != "duplicate" or len(duplicate.books) != 20:
+        print("jjwxc duplicate page failed", file=sys.stderr)
+        return 0
+    checks += 1
+    from .jjwxc import fetch_jjwxc_rank, resolve_jjwxc_category
+    from .markdown_out import output_name
+
+    try:
+        resolve_jjwxc_category("作者积分榜")
+    except RankFetchError as exc:
+        if "no channel tab" not in str(exc):
+            print("jjwxc index-only error changed", file=sys.stderr)
+            return 0
+    else:
+        print("jjwxc index-only board was accepted", file=sys.stderr)
+        return 0
+    try:
+        resolve_jjwxc_category("月度排行榜")
+    except RankFetchError as exc:
+        if "needs a genre" not in str(exc):
+            print("jjwxc genre error changed", file=sys.stderr)
+            return 0
+    else:
+        print("jjwxc bare board was accepted", file=sys.stderr)
+        return 0
+    checks += 1
+    snapshot = fetch_jjwxc_rank("新晋作者榜·衍生", 25, client=short)
+    text = render_markdown(snapshot)
+    if len(snapshot.items) != 23 or "书1" not in text or "收藏：[待补]" not in text:
+        print("jjwxc markdown missing fields", file=sys.stderr)
+        return 0
+    if "channelBody" in snapshot.source_url or "停在短页" not in text:
+        print("jjwxc markdown leaked the query or dropped the page note", file=sys.stderr)
+        return 0
+    if output_name(snapshot, "20261010") != "晋江新晋作者榜·衍生_20261010.md":
+        print("jjwxc filename failed", file=sys.stderr)
+        return 0
+    checks += 1
+    full_pages = {offset: [_book(offset + i) for i in range(1, 21)] for offset in range(0, 800, 20)}
+    capped = _Pages(full_pages)
+    try:
+        fetch_jjwxc_rank("natural_609", 801, client=capped)
+    except RankFetchError as exc:
+        if "page cap" not in str(exc):
+            print("jjwxc page cap error changed", file=sys.stderr)
+            return 0
+    else:
+        print("jjwxc page cap was accepted", file=sys.stderr)
+        return 0
+    kept = fetch_jjwxc_rank("natural_609", 800, client=_Pages(full_pages))
+    if "后面可能还有" not in " ".join(kept.source_notes) or len(kept.items) != 800:
+        print("jjwxc full cap note failed", file=sys.stderr)
+        return 0
+    checks += 1
+    return checks
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -248,6 +427,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--qidian", default="")
     parser.add_argument("--fanqie", default="")
     parser.add_argument("--ciweimao", default="")
+    parser.add_argument("--jjwxc", default="")
     parser.add_argument("--limit", type=int, default=20)
     parser.add_argument("--date", default="")
     args = parser.parse_args(argv)
@@ -263,8 +443,8 @@ def main(argv: list[str] | None = None) -> int:
     if not args.out:
         print("pass --out", file=sys.stderr)
         return 2
-    if not args.qidian and not args.fanqie and not args.ciweimao:
-        print("pass --qidian, --fanqie, or --ciweimao", file=sys.stderr)
+    if not args.qidian and not args.fanqie and not args.ciweimao and not args.jjwxc:
+        print("pass --qidian, --fanqie, --ciweimao, or --jjwxc", file=sys.stderr)
         return 2
     if args.qidian == "default":
         args.qidian = ",".join(QIDIAN_DEFAULTS)
@@ -272,7 +452,19 @@ def main(argv: list[str] | None = None) -> int:
         args.fanqie = ",".join(FANQIE_DEFAULTS)
     if args.ciweimao == "default":
         args.ciweimao = ",".join(CIWEIMAO_DEFAULTS)
-    return _run_fetch(Path(args.out), day, args.qidian, args.fanqie, args.ciweimao, args.limit)
+    if args.jjwxc == "default":
+        from .jjwxc import DEFAULT_CATEGORIES as JJWXC_DEFAULTS
+
+        args.jjwxc = ",".join(JJWXC_DEFAULTS)
+    return _run_fetch(
+        Path(args.out),
+        day,
+        args.qidian,
+        args.fanqie,
+        args.ciweimao,
+        args.jjwxc,
+        args.limit,
+    )
 
 
 if __name__ == "__main__":

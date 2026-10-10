@@ -24,6 +24,8 @@ def output_name(snapshot: RankSnapshot, day: str) -> str:
         return f"起点{label}_{day}.md"
     if snapshot.site == "ciweimao":
         return f"刺猬猫{label}_{day}.md"
+    if snapshot.site == "jjwxc":
+        return f"晋江{label}_{day}.md"
     return f"番茄{label}_{day}.md"
 
 
@@ -68,6 +70,21 @@ def _fanqie_block(item: RankItem) -> list[str]:
     return lines
 
 
+def _jjwxc_block(item: RankItem) -> list[str]:
+    meta = " · ".join(part for part in (item.author_name,) if part)
+    lines = [f"## #{item.rank_position} {item.book_name}"]
+    if meta:
+        lines.append(f"*{meta}*")
+    lines.append("**字数：[待补]**")
+    lines.append("**收藏：[待补]**")
+    lines.append("**营养液：[待补]**")
+    lines.append("**积分：[待补]**")
+    if item.book_url:
+        lines.append(f"[作品页]({item.book_url})")
+    lines.extend(["", "---", ""])
+    return lines
+
+
 def _ciweimao_block(item: RankItem) -> list[str]:
     meta = " · ".join(part for part in (item.author_name, item.category_text, item.status) if part)
     lines = [f"## #{item.rank_position} {item.book_name}"]
@@ -85,7 +102,7 @@ def _ciweimao_block(item: RankItem) -> list[str]:
 
 
 def render_markdown(snapshot: RankSnapshot) -> str:
-    method = "rankmin-app" if snapshot.site == "ciweimao" else "rankmin-http"
+    method = "rankmin-app" if snapshot.site in {"ciweimao", "jjwxc"} else "rankmin-http"
     lines = [
         f"# {snapshot.site_name} · {snapshot.category_name}",
         "",
@@ -94,14 +111,16 @@ def render_markdown(snapshot: RankSnapshot) -> str:
         f"- 抓取时间：{snapshot.snapshot_at}",
         f"- 条目数：{len(snapshot.items)}",
         f"- 解析：{snapshot.parser_version}",
-        "",
-        "---",
-        "",
     ]
+    if snapshot.site == "jjwxc":
+        lines.extend(f"- {note}" for note in snapshot.source_notes)
+    lines.extend(["", "---", ""])
     if snapshot.site == "qidian":
         renderer = _qidian_block
     elif snapshot.site == "ciweimao":
         renderer = _ciweimao_block
+    elif snapshot.site == "jjwxc":
+        renderer = _jjwxc_block
     else:
         renderer = _fanqie_block
     for item in snapshot.items:

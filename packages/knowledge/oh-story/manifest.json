@@ -354,8 +354,8 @@
     },
     {
       "path": "skills/story-long-scan/SKILL.md",
-      "sha256": "674dde7638934c3fc44b63f131f3e6e2c5d58ae52bb282b4d86fe2678d709faa",
-      "bytes": 11480
+      "sha256": "2e68c2eafc85d919184719903fb50a7af84cc975892738a99f80f1944572aa94",
+      "bytes": 12660
     },
     {
       "path": "skills/story-long-scan/bridge/ciweimao_app/__init__.py",
@@ -423,49 +423,29 @@
       "bytes": 29104
     },
     {
+      "path": "skills/story-long-scan/bridge/jjwxc_app/__init__.py",
+      "sha256": "4e8bd99f5aef1c853f39edcf1859e11931d0538dcec0548d16cb448860be4e3b",
+      "bytes": 624
+    },
+    {
+      "path": "skills/story-long-scan/bridge/jjwxc_app/http.py",
+      "sha256": "6a4e2206a0dd43f4645998d11881bd88c2d19f06610ee35d5a1964c8e62c465d",
+      "bytes": 7009
+    },
+    {
+      "path": "skills/story-long-scan/bridge/jjwxc_app/rank.py",
+      "sha256": "f995fe386e4c02d3d2a83bd9fe8dd36860fe9e56e6cddd7154dc0799360bf87a",
+      "bytes": 14911
+    },
+    {
       "path": "skills/story-long-scan/bridge/rankmin/__init__.py",
-      "sha256": "a908a80b7637e1d39ebd6284ad4eb286c72d2cc46b95d49206ca90de42325bc2",
-      "bytes": 270
+      "sha256": "29c5cad084f4a1da7d908c7a8cafc8e249c51d37835b13b3e77a5a787ce7384a",
+      "bytes": 356
     },
     {
       "path": "skills/story-long-scan/bridge/rankmin/__main__.py",
-      "sha256": "660d319527619eee5806dc008a4e883bb416cbd8c3d3e22fe6ff66eb6069bf0d",
-      "bytes": 10840
-    },
-    {
-      "path": "skills/story-long-scan/bridge/rankmin/__pycache__/__init__.cpython-313.pyc",
-      "sha256": "8993e1844d9d70d38082a3d99cbc51e337b08527fc6350f1b417068dc036a990",
-      "bytes": 450
-    },
-    {
-      "path": "skills/story-long-scan/bridge/rankmin/__pycache__/ciweimao.cpython-313.pyc",
-      "sha256": "f8836bb790f94cb4f7569da4859c48bb771fd39c7460d903f2abf7a296ace286",
-      "bytes": 18945
-    },
-    {
-      "path": "skills/story-long-scan/bridge/rankmin/__pycache__/contracts.cpython-313.pyc",
-      "sha256": "a61c7c30cae67432028dca499262897d3a6a024190775d8a9608aa62fa546321",
-      "bytes": 4296
-    },
-    {
-      "path": "skills/story-long-scan/bridge/rankmin/__pycache__/fanqie.cpython-313.pyc",
-      "sha256": "c7645ff5b5ded78362cc759ff8231d5a8e178f57d13d9b5fa500dfa2db48ea1c",
-      "bytes": 18524
-    },
-    {
-      "path": "skills/story-long-scan/bridge/rankmin/__pycache__/http_client.cpython-313.pyc",
-      "sha256": "143aec44ad9f322d173e4adbda9f7194dfe6958625eb4bfe74cb042ac99a1bb1",
-      "bytes": 6595
-    },
-    {
-      "path": "skills/story-long-scan/bridge/rankmin/__pycache__/qidian.cpython-313.pyc",
-      "sha256": "b382f383f3978f1f9a7be49ec50ec6a8ff2c7dd644eb1bfcf0a05646a3b39827",
-      "bytes": 12672
-    },
-    {
-      "path": "skills/story-long-scan/bridge/rankmin/__pycache__/textutil.cpython-313.pyc",
-      "sha256": "4597ea4fc7055ed19460c3777fa2a8f6812dc97f8bfd8ca2f715538e49fad4e0",
-      "bytes": 2374
+      "sha256": "da5d59812b81136ee5276ee031f6af97f2ad520cc6b0957bcdc56070b23681f3",
+      "bytes": 18291
     },
     {
       "path": "skills/story-long-scan/bridge/rankmin/ciweimao.py",
@@ -493,9 +473,14 @@
       "bytes": 4265
     },
     {
+      "path": "skills/story-long-scan/bridge/rankmin/jjwxc.py",
+      "sha256": "2adf5f70c98137f9ad98da5fc4537420068ae999bfcfb5c47a55f39a987110b5",
+      "bytes": 5992
+    },
+    {
       "path": "skills/story-long-scan/bridge/rankmin/markdown_out.py",
-      "sha256": "3bed78d34c3c5f6765b63daee11a979d35b3b86b46e387175aa155594f0bfffa",
-      "bytes": 4226
+      "sha256": "d9e1f852533e51a8378b918c860d6be5530d606e5628ee4adda91cd2a4d30bd2",
+      "bytes": 4996
     },
     {
       "path": "skills/story-long-scan/bridge/rankmin/qidian.py",
@@ -529,8 +514,8 @@
     },
     {
       "path": "skills/story-long-scan/references/platform-jjwxc.md",
-      "sha256": "687920c2591006af5af902b36da7b35ce0ca420db1951c3909c0ca0f722cfd2b",
-      "bytes": 1114
+      "sha256": "ef858ef7bdfcc8ee7dd19f8f67a21c127eadf1a226aedca9eb37b52532449a19",
+      "bytes": 1879
     },
     {
       "path": "skills/story-long-scan/references/platform-qidian.md",
@@ -1724,8 +1709,8 @@
     },
     {
       "path": "skills/story-short-scan/SKILL.md",
-      "sha256": "7ecb8ae6589f1c76f221c0ed567fd4816f9e59b3aeef2891ce995f93088addf4",
-      "bytes": 9303
+      "sha256": "02349c41e614749b1ccc4bf208aec978162c6bed657d6d0ac52165bb5f95fbb9",
+      "bytes": 9312
     },
     {
       "path": "skills/story-short-scan/references/manual-rank-input.md",
