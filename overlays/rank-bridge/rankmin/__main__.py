@@ -134,6 +134,29 @@ def self_test() -> int:
         print(f"polluted title was not named: {bad}", file=sys.stderr)
         return 2
     checks += 1
+    fanqie_app = Path(__file__).resolve().parents[1] / "fanqie_app"
+    if str(fanqie_app) not in sys.path:
+        sys.path.insert(0, str(fanqie_app))
+    try:
+        from fanqie_client import FanqieClient
+        from fanqie_pure import sign_headers
+    except ModuleNotFoundError as exc:
+        print(f"fanqie missing module: {exc.name}", file=sys.stderr)
+        return 2
+    if not callable(FanqieClient) or not callable(sign_headers):
+        print("fanqie client missing", file=sys.stderr)
+        return 2
+    checks += 1
+    try:
+        fetch_qidian_mobile("mm", 1)
+    except RankFetchError as exc:
+        if "unavailable" not in str(exc):
+            print(f"qidian female error changed: {exc}", file=sys.stderr)
+            return 2
+    else:
+        print("qidian female rank was fetched", file=sys.stderr)
+        return 2
+    checks += 1
     empty = parse_qidian_mobile_rank_ssr("<html></html>", category="mobile-yuepiao", limit=5)
     if empty.ok or empty.failure_code != "ssr_marker_missing":
         print("missing qidian marker did not fail", file=sys.stderr)

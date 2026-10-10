@@ -354,8 +354,8 @@
     },
     {
       "path": "skills/story-long-scan/SKILL.md",
-      "sha256": "0d490dff10ad00f1a7af63eaebb212fcf4955f30f04e7c02201196572580bd78",
-      "bytes": 11282
+      "sha256": "674dde7638934c3fc44b63f131f3e6e2c5d58ae52bb282b4d86fe2678d709faa",
+      "bytes": 11480
     },
     {
       "path": "skills/story-long-scan/bridge/ciweimao_app/__init__.py",
@@ -408,14 +408,64 @@
       "bytes": 34419
     },
     {
+      "path": "skills/story-long-scan/bridge/fanqie_app/__init__.py",
+      "sha256": "6de6e0fd59c510884303c7bf36d7fb39cfbf38289af7c0d4e7770cd56ed38ebf",
+      "bytes": 96
+    },
+    {
+      "path": "skills/story-long-scan/bridge/fanqie_app/fanqie_client.py",
+      "sha256": "6f5f11852d4928ab8a93bdaae5237e2adf5281a142daaea19a3064e3d7f6d084",
+      "bytes": 36140
+    },
+    {
+      "path": "skills/story-long-scan/bridge/fanqie_app/fanqie_pure.py",
+      "sha256": "a13524fdc4accb2343ee541f3b38b0fba9df7cba86b1c3ff5a0d34073163e3c3",
+      "bytes": 29104
+    },
+    {
       "path": "skills/story-long-scan/bridge/rankmin/__init__.py",
       "sha256": "a908a80b7637e1d39ebd6284ad4eb286c72d2cc46b95d49206ca90de42325bc2",
       "bytes": 270
     },
     {
       "path": "skills/story-long-scan/bridge/rankmin/__main__.py",
-      "sha256": "a6af38fdb483af82be52d999e0f9492795cc2230e10f781b37cd1a7f2e8d62c7",
-      "bytes": 9983
+      "sha256": "660d319527619eee5806dc008a4e883bb416cbd8c3d3e22fe6ff66eb6069bf0d",
+      "bytes": 10840
+    },
+    {
+      "path": "skills/story-long-scan/bridge/rankmin/__pycache__/__init__.cpython-313.pyc",
+      "sha256": "8993e1844d9d70d38082a3d99cbc51e337b08527fc6350f1b417068dc036a990",
+      "bytes": 450
+    },
+    {
+      "path": "skills/story-long-scan/bridge/rankmin/__pycache__/ciweimao.cpython-313.pyc",
+      "sha256": "f8836bb790f94cb4f7569da4859c48bb771fd39c7460d903f2abf7a296ace286",
+      "bytes": 18945
+    },
+    {
+      "path": "skills/story-long-scan/bridge/rankmin/__pycache__/contracts.cpython-313.pyc",
+      "sha256": "a61c7c30cae67432028dca499262897d3a6a024190775d8a9608aa62fa546321",
+      "bytes": 4296
+    },
+    {
+      "path": "skills/story-long-scan/bridge/rankmin/__pycache__/fanqie.cpython-313.pyc",
+      "sha256": "c7645ff5b5ded78362cc759ff8231d5a8e178f57d13d9b5fa500dfa2db48ea1c",
+      "bytes": 18524
+    },
+    {
+      "path": "skills/story-long-scan/bridge/rankmin/__pycache__/http_client.cpython-313.pyc",
+      "sha256": "143aec44ad9f322d173e4adbda9f7194dfe6958625eb4bfe74cb042ac99a1bb1",
+      "bytes": 6595
+    },
+    {
+      "path": "skills/story-long-scan/bridge/rankmin/__pycache__/qidian.cpython-313.pyc",
+      "sha256": "b382f383f3978f1f9a7be49ec50ec6a8ff2c7dd644eb1bfcf0a05646a3b39827",
+      "bytes": 12672
+    },
+    {
+      "path": "skills/story-long-scan/bridge/rankmin/__pycache__/textutil.cpython-313.pyc",
+      "sha256": "4597ea4fc7055ed19460c3777fa2a8f6812dc97f8bfd8ca2f715538e49fad4e0",
+      "bytes": 2374
     },
     {
       "path": "skills/story-long-scan/bridge/rankmin/ciweimao.py",
@@ -434,8 +484,8 @@
     },
     {
       "path": "skills/story-long-scan/bridge/rankmin/fanqie.py",
-      "sha256": "510b896145193b9b0e4a017edc6c08671bbc9305d4485dff4ebbbe84f9dcb253",
-      "bytes": 13939
+      "sha256": "d73d5e2cc27f43ae35e896178fa9207ae86cacd9d9a9ab037a369e74703a2db5",
+      "bytes": 16984
     },
     {
       "path": "skills/story-long-scan/bridge/rankmin/http_client.py",
@@ -449,8 +499,8 @@
     },
     {
       "path": "skills/story-long-scan/bridge/rankmin/qidian.py",
-      "sha256": "d78a4d6a349fc8e2fb120e531acbdc5e2153d8d190c9a25752224c3ebcbb430c",
-      "bytes": 9679
+      "sha256": "d9ece985ac5d23dca62f10043934dd47f3f091bfcce9c69bc1299c21b1cea56a",
+      "bytes": 9971
     },
     {
       "path": "skills/story-long-scan/bridge/rankmin/textutil.py",
@@ -474,8 +524,8 @@
     },
     {
       "path": "skills/story-long-scan/references/platform-fanqie.md",
-      "sha256": "c5d076d5424afd0072b562bf6ab37759554d9bd965c7f7132891fe82c6232189",
-      "bytes": 3088
+      "sha256": "bad2a232677f858ff68741166f9874fdc375b9581ea4a4b980cb86516a9c6e9f",
+      "bytes": 3082
     },
     {
       "path": "skills/story-long-scan/references/platform-jjwxc.md",

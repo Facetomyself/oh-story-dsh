@@ -43,11 +43,11 @@ metadata: {"openclaw":{"source":"https://github.com/zenstory-ai/oh-story-claudec
 
 ### Phase 2：确定数据来源
 
-**扫榜需要真实数据支撑。** 起点、番茄和刺猬猫只跑本技能目录里的 `bridge/rankmin_cli.py`。起点和番茄是匿名 HTTP，不带 Cookie，不进详情页，也不保存原始 HTML。刺猬猫走同目录的 `bridge/ciweimao_app`，也就是 App 采集器的协议客户端。七猫、晋江本版本没有 provider。
+**扫榜需要真实数据支撑。** 起点、番茄和刺猬猫只跑本技能目录里的 `bridge/rankmin_cli.py`。起点男频是匿名 HTTP，不带 Cookie，不进详情页，也不保存原始 HTML。番茄走同目录的 `bridge/fanqie_app`，取分类热门和分类最新的明文。刺猬猫走同目录的 `bridge/ciweimao_app`，也就是 App 采集器的协议客户端。七猫、晋江本版本没有 provider。
 
 | 优先级 | 模式 | 说明 | 何时用 |
 |--------|------|------|--------|
-| 1 | **rankmin** | 起点移动榜、番茄榜单页、刺猬猫 App 排行，写出榜单 markdown | 选了起点、番茄或刺猬猫 |
+| 1 | **rankmin** | 起点移动男频榜、番茄分类热门/最新、刺猬猫 App 排行，写出榜单 markdown | 选了起点、番茄或刺猬猫 |
 | 2 | **用户提供** | 用户粘贴榜单截图/文字 | 用户已有数据，或平台没有 provider |
 | 3 | **内置知识** | 基于知识库趋势数据做分析 | 命令失败且用户无数据时 |
 
@@ -56,7 +56,7 @@ metadata: {"openclaw":{"source":"https://github.com/zenstory-ai/oh-story-claudec
 1. 平台参考只读分析维度和字段：[起点](references/platform-qidian.md) / [番茄](references/platform-fanqie.md)。不要执行参考里的旧命令，不要启动 CDP。
 2. 每次扫榜新建输出目录 `扫榜/{YYYYMMDD}/`（同日再扫加 `-2`）。在本技能目录执行：`python3 bridge/rankmin_cli.py --out {输出目录} --limit 20 --qidian yuepiao,hotsales,readindex`。番茄再加 `--fanqie male-hot-xifangqihuan,male-newbook-xifangqihuan,female-hot-gufengshiqing,female-newbook-gufengshiqing`。作者点名的榜或题材换成对应别名，不要一次扫完全部题材。
 3. 成功时写出 `起点{榜}_{日期}.md` 和 `番茄{榜}_{日期}.md`。主会话读这些文件。本包没有聚合脚本，不要运行 `scripts/` 下的采集或聚合命令。
-4. 退出码 2、缺模块或请求失败：该榜这次没拿到。不要编造名次，不要改走 CDP，也不要去作品页或章节页补标题。番茄若报私用区字段，报告里写明缺的是哪个字段。
+4. 退出码 2、缺模块或请求失败：该榜这次没拿到。不要编造名次，不要改走 CDP，也不要去作品页或章节页补标题。起点女生精选榜和女生月票榜当前没有公开列表，报 unavailable 时结论不含这两条。番茄 `hot` 是分类热门，`newbook` 是分类最新。
 5. 同方向不到 15 本标「少」，等同 `[数据稀疏]`。要看某一条的简介，直接打开对应 markdown，一次一个方向。
 
 #### 刺猬猫

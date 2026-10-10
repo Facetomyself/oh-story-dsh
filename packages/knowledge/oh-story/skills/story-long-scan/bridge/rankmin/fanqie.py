@@ -2,20 +2,20 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 from urllib.parse import urljoin
 
 from .contracts import ParseResult, RankFetchError, RankItem, RankSnapshot, SourceSpec
-from .http_client import fetch_text
 from .textutil import extract_json_object_after_marker, has_private_use_chars, now_cst_iso
 
 PARSER_VERSION = "fanqie_initial_state_v2"
 STATE_MARKER = "window.__INITIAL_STATE__"
 BASE_URL = "https://fanqienovel.com/rank"
 BASE_PAGE = "https://fanqienovel.com/"
-REFERER = "https://fanqienovel.com/rank/"
 _CATEGORY_PATTERN = re.compile(r"^[01]_[12]_\d+$")
 CHECKED_FIELDS = ("book_name", "author_name", "description")
 
@@ -72,11 +72,11 @@ FEMALE_GENRES: tuple[FanqieGenre, ...] = (
 )
 
 RANK_TYPES = {
-    "hot": {"code": "2", "name": "阅读榜"},
-    "read": {"code": "2", "name": "阅读榜"},
-    "reading": {"code": "2", "name": "阅读榜"},
-    "new": {"code": "1", "name": "新书榜"},
-    "newbook": {"code": "1", "name": "新书榜"},
+    "hot": {"code": "2", "name": "热门", "sort_by": 24},
+    "read": {"code": "2", "name": "热门", "sort_by": 24},
+    "reading": {"code": "2", "name": "热门", "sort_by": 24},
+    "new": {"code": "1", "name": "最新", "sort_by": 76},
+    "newbook": {"code": "1", "name": "最新", "sort_by": 76},
 }
 GENDERS = {"male": "1", "m": "1", "nan": "1", "female": "0", "f": "0", "nv": "0"}
 GENDER_NAMES = {"1": "男频", "0": "女频"}
@@ -133,8 +133,8 @@ def fanqie_source(category: str) -> SourceSpec:
         category=resolved,
         category_name=f"{GENDER_NAMES[gender_code]}{rank['name']} / {genre_name}",
         url=f"{BASE_URL}/{resolved}",
-        required_adapters=["fanqie_initial_state_parser"],
-        known_risks=["private-use titles fail closed; this provider does not open book pages"],
+        required_adapters=["fanqie_app_category_landing"],
+        known_risks=["category landing is 热门/最新, not the web rank font page; chapter download is not used"],
     )
 
 
@@ -233,6 +233,16 @@ def parse_fanqie_initial_state(html: str, limit: int = 20) -> ParseResult:
     )
 
 
+def _plain(value: object) -> str:
+    if isinstance(value, str):
+        return value.strip()
+    if isinstance(value, bool) or value is None:
+        return ""
+    if isinstance(value, (int, float)):
+        return str(value)
+    return ""
+
+
 def _creation_status(value: object) -> str:
     if value in ("0", 0):
         return "已完结"
@@ -254,28 +264,28 @@ def normalize_fanqie(source: SourceSpec, parse_result: ParseResult) -> RankSnaps
     items: list[RankItem] = []
     for index, raw in enumerate(parse_result.items, start=1):
         rank_position = int(raw.get("_rank_position") or raw.get("currentPos") or index)
-        book_id = str(raw.get("bookId") or f"fanqie-{rank_position}")
-        book_name = str(raw.get("bookName") or "").strip()
-        author_name = str(raw.get("author") or "").strip()
-        description = str(raw.get("abstract") or "").strip()
-        category = str(raw.get("category") or "").strip()
-        category_v2 = str(raw.get("categoryV2") or "").strip()
-        read_count = str(raw.get("read_count") or raw.get("readCount") or "").strip()
-        word_number = str(raw.get("wordNumber") or "").strip()
+        book_id = _plain(raw.get("bookId") or raw.get("book_id")) or f"fanqie-{rank_position}"
+        book_name = _plain(raw.get("bookName") or raw.get("book_name") or raw.get("original_book_name"))
+        author_name = _plain(raw.get("author") or raw.get("author_name"))
+        description = _plain(raw.get("abstract") or raw.get("book_abstract_v2"))
+        category = _plain(raw.get("category"))
+        category_v2 = _plain(raw.get("categoryV2"))
+        read_count = _plain(raw.get("read_count") or raw.get("readCount") or raw.get("read_cnt_text"))
+        word_number = _plain(raw.get("wordNumber") or raw.get("word_number"))
         items.append(RankItem(
             rank_position=rank_position,
             book_id=book_id,
             book_name=book_name,
             author_name=author_name,
             book_url=urljoin(BASE_PAGE, f"page/{book_id}"),
-            cover_url=str(raw.get("thumbUri") or ""),
+            cover_url=_plain(raw.get("thumbUri") or raw.get("thumb_url") or raw.get("thumb_uri")),
             description=description,
             category_text=" / ".join(part for part in (category, category_v2) if part),
             score_text=f"在读：{read_count}" if read_count else "",
             word_count_text=word_number,
-            status=_creation_status(raw.get("creationStatus")),
+            status=_creation_status(raw.get("creationStatus", raw.get("creation_status"))),
             tags=[part for part in (category, category_v2) if part],
-            latest_chapter=str(raw.get("lastChapterTitle") or "").strip(),
+            latest_chapter=_plain(raw.get("lastChapterTitle") or raw.get("last_chapter_title")),
             latest_update_time=_timestamp(raw.get("lastChapterUpdateTime")),
             extra={"read_count": read_count},
             field_confidence={
@@ -312,20 +322,98 @@ def polluted_fields(snapshot: RankSnapshot) -> list[str]:
     return found
 
 
+_CLIENT: Any = None
+
+
+def _fanqie_client() -> Any:
+    global _CLIENT
+    if _CLIENT is not None:
+        return _CLIENT
+    root = Path(__file__).resolve().parents[1] / "fanqie_app"
+    if str(root) not in sys.path:
+        sys.path.insert(0, str(root))
+    try:
+        from fanqie_client import FanqieClient
+    except ModuleNotFoundError as exc:
+        raise RankFetchError(f"fanqie missing module: {exc.name}") from None
+    try:
+        _CLIENT = FanqieClient()
+    except Exception as exc:
+        raise RankFetchError(f"fanqie request failed: {type(exc).__name__}") from None
+    return _CLIENT
+
+
+def _walk_books(node: object, found: list[dict[str, Any]]) -> None:
+    if isinstance(node, dict):
+        book_id = _plain(node.get("book_id") or node.get("id"))
+        book_name = _plain(node.get("book_name") or node.get("original_book_name"))
+        if book_id and book_name:
+            found.append(node)
+            return
+        for value in node.values():
+            _walk_books(value, found)
+    elif isinstance(node, list):
+        for item in node:
+            _walk_books(item, found)
+
+
+def _landing_books(category_id: str, *, sort_by: int, query_gender: int, limit: int) -> list[dict[str, Any]]:
+    client = _fanqie_client()
+    collected: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    offset = 0
+    while len(collected) < limit:
+        page_limit = min(30, limit - len(collected))
+        try:
+            payload = client.category_landing(
+                category_id,
+                offset=offset,
+                limit=page_limit,
+                sort_by=sort_by,
+                query_gender=query_gender,
+            )
+        except Exception as exc:
+            raise RankFetchError(f"fanqie request failed: {type(exc).__name__}") from None
+        page: list[dict[str, Any]] = []
+        _walk_books(payload, page)
+        fresh = 0
+        for book in page:
+            book_id = _plain(book.get("book_id") or book.get("id"))
+            if not book_id or book_id in seen:
+                continue
+            seen.add(book_id)
+            collected.append(book)
+            fresh += 1
+            if len(collected) >= limit:
+                break
+        if fresh == 0 or fresh < page_limit:
+            break
+        offset += fresh
+    return collected[:limit]
+
+
 def fetch_fanqie_rank(category: str, limit: int = 20) -> RankSnapshot:
     if limit < 1:
         raise RankFetchError("fanqie limit must be at least 1")
     source = fanqie_source(category)
-    response = fetch_text(source.url, headers={"Referer": REFERER, "Accept-Encoding": "gzip"})
-    if response.error or response.status != 200 or not response.text:
-        raise RankFetchError(
-            f"fanqie request failed: category={source.category} status={response.status} error={response.error or 'empty'}"
-        )
-    parsed = parse_fanqie_initial_state(response.text, limit=limit)
-    if not parsed.ok:
-        raise RankFetchError(
-            f"fanqie parse failed: category={source.category} code={parsed.failure_code} detail={parsed.failure_detail}"
-        )
+    gender_code, rank_code, genre_id = source.category.split("_", 2)
+    sort_by = 76 if rank_code == "1" else 24
+    query_gender = 0 if gender_code == "0" else 1
+    books = _landing_books(genre_id, sort_by=sort_by, query_gender=query_gender, limit=limit)
+    if not books:
+        raise RankFetchError(f"fanqie book_list_empty: category={source.category}")
+    items: list[dict[str, Any]] = []
+    for index, book in enumerate(books, start=1):
+        item = dict(book)
+        item["_rank_position"] = index
+        items.append(item)
+    parsed = ParseResult(
+        ok=True,
+        items=items,
+        category_name=source.category_name,
+        parser_version="fanqie_app_category_landing_v1",
+        source_notes=["fanqie_app_category_landing", f"sort_by:{sort_by}", f"query_gender:{query_gender}"],
+    )
     snapshot = normalize_fanqie(source, parsed)
     bad = polluted_fields(snapshot)
     if bad:

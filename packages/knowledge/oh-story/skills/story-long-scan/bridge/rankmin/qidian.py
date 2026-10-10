@@ -21,8 +21,8 @@ SCRIPT_RE = re.compile(
 )
 
 # route, short file label, semantic key.
-# mobile-newsign shares newbook with mobile-pubnewbook, and both female lists share female.
-# Those collisions are the scout catalog. This slice does not invent a third URL.
+# mobile-newsign shares newbook with mobile-pubnewbook.
+# The two female aliases stay resolvable, but the open mobile host no longer serves them.
 MOBILE_RANK_ROUTES: dict[str, tuple[str, str, str]] = {
     "mobile-yuepiao": ("yuepiao", "月票榜", "yuepiao"),
     "mobile-hotsales": ("hotsales", "畅销榜", "hotsales"),
@@ -213,9 +213,18 @@ def normalize_qidian_mobile(source: SourceSpec, parse_result: ParseResult) -> Ra
     )
 
 
+_FEMALE_CLOSED = {"mobile-mm", "mobile-mm-yuepiao"}
+
+
 def fetch_qidian_mobile(category: str, limit: int = 20) -> RankSnapshot:
     if limit < 1:
         raise RankFetchError("qidian limit must be at least 1")
+    alias = resolve_qidian_category(category)
+    if alias in _FEMALE_CLOSED:
+        raise RankFetchError(
+            "qidian female rank unavailable: "
+            f"{alias} is not on the open mobile rank host, and the mm host returns an anti-bot page"
+        )
     source = qidian_source(category)
     response = fetch_text(source.url, headers={
         "Referer": REFERER,

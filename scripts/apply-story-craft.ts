@@ -150,8 +150,11 @@ const replacements: readonly Replacement[] = [
   },
   {
     path: "skills/story-long-scan/references/platform-fanqie.md",
-    to: "作者选了番茄才读本文。采集只走本技能 `bridge/rankmin_cli.py` 的榜单页。书名若仍是私用区字符，命令失败并指出缺的字段。不要启动 CDP，不要进详情页或章节页补标题。",
-    from: ["作者选了番茄才读本文。番茄列表页有字体反爬，须先用 `/browser-cdp` 启动 Chrome，再由脚本从详情页（内嵌 JSON `bookName`/`author`/`abstract`/`categoryV2` + `<title>` + og:meta）多策略解码书名、作者、题材、标签、简介。"]
+    to: "作者选了番茄才读本文。采集走本技能 `bridge/fanqie_app` 的 App 分类榜，经 `bridge/rankmin_cli.py` 写榜。`hot` 是分类热门，`newbook` 是分类最新。不要启动 CDP，不要下章节，不要进网页榜补标题。",
+    from: [
+      "作者选了番茄才读本文。采集只走本技能 `bridge/rankmin_cli.py` 的榜单页。书名若仍是私用区字符，命令失败并指出缺的字段。不要启动 CDP，不要进详情页或章节页补标题。",
+      "作者选了番茄才读本文。番茄列表页有字体反爬，须先用 `/browser-cdp` 启动 Chrome，再由脚本从详情页（内嵌 JSON `bookName`/`author`/`abstract`/`categoryV2` + `<title>` + og:meta）多策略解码书名、作者、题材、标签、简介。"
+    ]
   },
   {
     path: "skills/story-long-scan/references/platform-fanqie.md",
@@ -217,8 +220,11 @@ const replacements: readonly Replacement[] = [
   },
   {
     path: "skills/story-long-scan/references/platform-fanqie.md",
-    to: "命令退出码 2 且指出私用区字段时，这次榜单作废。不要打开作品页，不要启动 Chrome，也不要重采详情。",
-    from: ["文件头 `数据质量` 标 `[标题解析异常]`（书名多为 `（标题待解析）`）：多为详情页结构变动或被登录/验证页拦截。在已登录的 Chrome 里手动打开任一 `https://fanqienovel.com/page/{bookId}`，确认页面正常、不是验证页；控制台报 `CDP 无响应` 就按 browser-cdp 重新启动 Chrome。确认正常后重采。"]
+    to: "命令退出码 2 时这次榜单作废。不要打开作品页，不要启动 Chrome，也不要下章节。",
+    from: [
+      "命令退出码 2 且指出私用区字段时，这次榜单作废。不要打开作品页，不要启动 Chrome，也不要重采详情。",
+      "文件头 `数据质量` 标 `[标题解析异常]`（书名多为 `（标题待解析）`）：多为详情页结构变动或被登录/验证页拦截。在已登录的 Chrome 里手动打开任一 `https://fanqienovel.com/page/{bookId}`，确认页面正常、不是验证页；控制台报 `CDP 无响应` 就按 browser-cdp 重新启动 Chrome。确认正常后重采。"
+    ]
   },
   {
     path: "skills/story-long-scan/references/platform-jjwxc.md",
@@ -303,6 +309,9 @@ async function copyRankBridge(): Promise<void> {
   const clientTarget = join(ohStoryRoot, "skills/story-long-scan/bridge/ciweimao_app");
   await rm(clientTarget, { recursive: true, force: true });
   await cp(join(rankBridgeRoot, "ciweimao_app"), clientTarget, { recursive: true });
+  const fanqieTarget = join(ohStoryRoot, "skills/story-long-scan/bridge/fanqie_app");
+  await rm(fanqieTarget, { recursive: true, force: true });
+  await cp(join(rankBridgeRoot, "fanqie_app"), fanqieTarget, { recursive: true });
 }
 
 async function spliceLongScanPhase2(): Promise<void> {
