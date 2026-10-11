@@ -5,6 +5,7 @@ import { ohStoryRoot, refreshBundledManifest } from "./knowledge-assets.js";
 
 const overlayRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../overlays/story-craft");
 const rankBridgeRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../overlays/rank-bridge");
+const searchBridgeRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../overlays/search-bridge");
 
 const copies = [
   ["scene-grammar.md", "skills/story-long-write/references/scene-grammar.md"],
@@ -396,6 +397,15 @@ async function copyRankBridge(): Promise<void> {
   await cp(join(rankBridgeRoot, "jjwxc_app"), jjwxcTarget, { recursive: true });
 }
 
+async function copySearchBridge(): Promise<void> {
+  const packageTarget = join(ohStoryRoot, "skills/story/bridge/searchmin");
+  const cliTarget = join(ohStoryRoot, "skills/story/bridge/searchmin_cli.py");
+  await rm(packageTarget, { recursive: true, force: true });
+  await mkdir(dirname(cliTarget), { recursive: true });
+  await cp(join(searchBridgeRoot, "searchmin"), packageTarget, { recursive: true });
+  await copyFile(join(searchBridgeRoot, "searchmin_cli.py"), cliTarget);
+}
+
 async function spliceLongScanPhase2(): Promise<void> {
   const body = await readFile(join(rankBridgeRoot, "long-scan-phase2.md"), "utf8");
   const normalized = body.endsWith("\n") ? body : `${body}\n`;
@@ -422,6 +432,7 @@ export async function applyStoryCraft(): Promise<void> {
     await copyFile(join(overlayRoot, sourceName), target);
   }
   await copyRankBridge();
+  await copySearchBridge();
   for (const entry of replacements) await replaceOnce(entry);
   await spliceLongScanPhase2();
   await syncCraftSections();

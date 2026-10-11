@@ -11,6 +11,16 @@
 
 ## [Unreleased]
 
+## [0.1.25] - 2026-10-11
+
+### Added
+
+- 资料核验、短篇公开信息和外部事实查证改走 `story/bridge/searchmin_cli.py`。deep 并行 Exa、Tavily 和带引用的 Grok，fast 只问 Exa，answer 只要 Tavily 的回答。链接只取来源返回的引用。密钥放运行用户的 `~/.dsh/search.json` 或对应环境变量，不写进仓库。某一来源没有密钥就跳过。
+
+### Changed
+
+- 长篇榜单失败仍然不打开网页榜、library 页或作品页，也不改用 searchmin 补。
+
 ## [0.1.24] - 2026-10-11
 
 ### Changed

@@ -47,6 +47,12 @@ export async function loadBundledRole(
         "If oh_story_bundled_reference or a required bundled reference is unavailable, report the missing reference to the caller. Never call the generic skill tool, fall back to a legacy platform path, or claim that an unread reference was used.",
         "Use only the tools actually visible to you. Mutate files only when the caller explicitly requests it and your visible DSH tools permit it; otherwise return findings to the caller."
       ];
+  if (name === "story-researcher" && execution === "native-tools") {
+    integration.push(
+      "外部事实先在本插件的 story 技能目录执行 python3 bridge/searchmin_cli.py --query \"<问题>\" --mode deep。fast 只走 Exa，answer 只走 Tavily 的回答。deep 并行 Exa、Tavily 和带引用的 Grok。链接只采用来源返回的引用，不采用模型自己写出的链接。某一来源没有密钥就跳过。不要把密钥写进命令、文件或回复。",
+      "不要启动 CDP、Chrome 或独立浏览器。上游正文里的 Google/Bing/CDP 顺序在 DSH 里不执行。searchmin 没有可用来源时，再用可见的 web_search 或 web_fetch。不要用搜索补长篇榜单。"
+    );
+  }
   return [
     `OH_STORY_DSH_ROLE:${name}`,
     ...integration,

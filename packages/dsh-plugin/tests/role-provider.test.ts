@@ -25,6 +25,14 @@ describe("bundled Oh Story roles", () => {
     expect(persona).not.toContain("do not call tools");
   });
 
+  it("sends story-researcher to searchmin before preset web tools", async () => {
+    const persona = await loadBundledRole("story-researcher", resolve(import.meta.dirname, "../../knowledge/oh-story/roles"), "native-tools");
+    expect(persona).toContain("python3 bridge/searchmin_cli.py");
+    expect(persona).toContain("不要启动 CDP、Chrome 或独立浏览器");
+    expect(persona).toContain("不要用搜索补长篇榜单");
+    expect(persona).not.toContain("do not call tools");
+  });
+
   it("keeps the updated benchmark-book failure distinction", async () => {
     // Oh Story 0.8.2 moved the procedure out of the persona into a bundled agent reference.
     const persona = await loadBundledRole("story-explorer", resolve(import.meta.dirname, "../../knowledge/oh-story/roles"), "native-tools");

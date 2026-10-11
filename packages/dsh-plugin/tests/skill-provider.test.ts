@@ -90,11 +90,15 @@ describe("Oh Story bundled skill provider", () => {
     for (const phrase of ["灵感库", "跨书灵感聚合", "更新灵感库", "不写正文", "「开一本长篇或接着写」", "「更多（拆书、扫榜、导入旧稿、审稿、封面）」"]) {
       expect(route?.content).toContain(phrase);
     }
+    expect(route?.content).toContain("bridge/searchmin_cli.py");
     expect(route?.content).not.toContain("还没部署过");
     expect(route?.content).not.toContain("dashboard-server.mjs");
     const browserCandidate = candidates.find((candidate) => candidate.name === "browser-cdp");
     const browser = await provider.get(browserCandidate!, {});
     expect(browser?.content).not.toContain("setup-cdp-chrome.js 9222");
+    expect(browser?.content).toContain("bridge/searchmin_cli.py");
+    expect(browser?.content).toContain("失败的榜不要改用搜索补");
+    expect(browser?.content).not.toContain("榜单采集");
     for (const name of ["story-long-scan", "story-short-scan"]) {
       const candidate = candidates.find((value) => value.name === name);
       const scan = await provider.get(candidate!, {});
@@ -115,6 +119,8 @@ describe("Oh Story bundled skill provider", () => {
     expect(longScan?.content).toContain("公开作品页的收藏、营养液、积分和字数");
     expect(longScan?.content).not.toContain("当前 DSH Preset 可见的网页工具");
     expect(longScan?.content).toContain("不要打开网页榜、library 页或作品页");
+    expect(longScan?.content).toContain("不要跑 searchmin_cli.py 去补");
+    expect(longScan?.content).not.toContain("python3 bridge/searchmin_cli.py");
     const longBody = longScan?.content ?? "";
     const step3 = longBody.slice(longBody.indexOf("3. 起点默认"), longBody.indexOf("\n4. "));
     expect(step3).toContain("male-hot-xifangqihuan,male-newbook-xifangqihuan,female-hot-gufengshiqing,female-newbook-gufengshiqing");
@@ -131,6 +137,8 @@ describe("Oh Story bundled skill provider", () => {
     expect((await provider.get(candidates.find((value) => value.name === "story-short-scan")!, {}))?.content).toContain("短篇扫榜结论.md");
     const shortScan = await provider.get(candidates.find((value) => value.name === "story-short-scan")!, {});
     expect(shortScan?.content).toContain("当前 DSH Preset 可见的网页工具");
+    expect(shortScan?.content).toContain("bridge/searchmin_cli.py");
+    expect(shortScan?.content).toContain("长篇榜单不要用 searchmin 补");
     expect(shortScan?.content).toContain("可信度：样本多少篇、来自哪几个榜");
     for (const name of ["story-long-analyze", "story-import"]) {
       const analysis = await provider.get(candidates.find((value) => value.name === name)!, {});

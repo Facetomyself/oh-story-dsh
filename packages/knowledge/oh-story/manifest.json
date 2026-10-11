@@ -2008,6 +2008,56 @@
       "bytes": 6
     },
     {
+      "path": "skills/story/bridge/searchmin/__init__.py",
+      "sha256": "31a11718b7964e7b199dc84b1d11d8e253e41089488bf65653bb89d3a8abe786",
+      "bytes": 58
+    },
+    {
+      "path": "skills/story/bridge/searchmin/__main__.py",
+      "sha256": "1d3267eb1b70bd059ba000537fff1fd1499310504d900a4377358e37215ebd31",
+      "bytes": 12450
+    },
+    {
+      "path": "skills/story/bridge/searchmin/exa.py",
+      "sha256": "eca8db1e46ca1c5daf3de27bd235b99370f42ff442c8d169cc3f625eac6f8d15",
+      "bytes": 3579
+    },
+    {
+      "path": "skills/story/bridge/searchmin/grok.py",
+      "sha256": "238a205823e9991862e287323210bc4d8fd906673f88a28e19e9f7be9f03c504",
+      "bytes": 17647
+    },
+    {
+      "path": "skills/story/bridge/searchmin/http.py",
+      "sha256": "45407d679c035f71d8c5df2cbb423d603f415126f71a399e792b31e8c3bdb230",
+      "bytes": 1604
+    },
+    {
+      "path": "skills/story/bridge/searchmin/keys.py",
+      "sha256": "469df6d9ebe17d43159be0b94082f4f1136d4ed6763a3a74c4793702c2700633",
+      "bytes": 4851
+    },
+    {
+      "path": "skills/story/bridge/searchmin/orchestrate.py",
+      "sha256": "966381257f8d98db405a18b965569fb88b9d1d6dd4c18e18db677b26835dd7ef",
+      "bytes": 7857
+    },
+    {
+      "path": "skills/story/bridge/searchmin/tavily.py",
+      "sha256": "10bab3c9a23ba12c3edbde2bcb85cd128ecbca5ad4f7c9204fd1d63d7a50e37d",
+      "bytes": 2020
+    },
+    {
+      "path": "skills/story/bridge/searchmin/urls.py",
+      "sha256": "ad1e2dcec6bc031d238259bbd193f59b47611491b971c148b9d26dda15e4b118",
+      "bytes": 958
+    },
+    {
+      "path": "skills/story/bridge/searchmin_cli.py",
+      "sha256": "d11fcedb0c4c3f5b2bb6b60879545a58e285dbc165edf58d7ee31876999b5895",
+      "bytes": 454
+    },
+    {
       "path": "skills/story/references/author-memory-maintenance.md",
       "sha256": "5727f0ab785e5839ec5aba79929838d125de2422c076d3b3045c25497896881b",
       "bytes": 8766

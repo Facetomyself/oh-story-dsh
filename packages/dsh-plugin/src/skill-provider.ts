@@ -120,7 +120,8 @@ const DSH_NATIVE_SKILLS: Readonly<Partial<Record<string, string>>> = {
 - 审稿与去 AI 味：story-review、story-deslop
 - 封面：story-cover
 - 查本书的角色、伏笔、进度或设定：用 oh_story_role 调用 story-explorer；查外部资料：
-  story-researcher。回答讲故事里的事，编号只跟着故事描述出现
+  story-researcher。研究员用本技能目录的 bridge/searchmin_cli.py（Exa、Tavily、Grok）。
+  回答讲故事里的事，编号只跟着故事描述出现
 - 管理作者习惯（记住/查看/确认/替换/忘掉写作偏好）：加载本 skill 的
   references/author-memory.md，只用本 skill 的 scripts/author_memory_commit.py 管理
   两级作者记忆：全局、题材、流程条目在工作区 .story/作者记忆/（AP 编号），本书条目在
@@ -169,13 +170,21 @@ Agent 过程通过右侧动态栏或官方 Chat 查看。禁止启动独立 Dash
   "browser-cdp": `# browser-cdp — DSH 浏览器能力适配
 
 本 Skill 不启动 Chrome、CDP 端口、独立浏览器 Host 或 setup-cdp-chrome.js。
-仅使用当前 DSH Preset 已暴露的 web_search、web_fetch 或浏览器工具完成网页读取、
-榜单采集和资料核验。保持以下原则：
+长篇榜单不在这里采集，走 story-long-scan 的 bridge/rankmin_cli.py。失败的榜不要改用搜索补。
 
-1. 优先使用结构化搜索/抓取工具；需要登录态或交互页面时才使用可见浏览器能力。
+资料核验和公开信息用 story 技能目录的 bridge/searchmin_cli.py：
+python3 bridge/searchmin_cli.py --query "..." --mode deep
+fast 只问 Exa，deep 并行 Exa、Tavily 和带引用的 Grok，answer 只要 Tavily 的回答。
+链接只采用各来源返回的引用，不采用模型自己写出的链接。某一来源没有密钥就跳过，其余照常。
+密钥放运行用户的 ~/.dsh/search.json，或 EXA_API_KEY、TAVILY_API_KEY、GROK_API_KEY。不要把密钥写进命令、文件或报告。
+
+当前 Preset 的 web_search、web_fetch 或浏览器工具只在 searchmin 没有可用来源、或需要登录态页面时使用。
+保持以下原则：
+
+1. 优先使用 searchmin；需要登录态或交互页面时才使用可见浏览器能力。
 2. 尊重站点条款、访问频率与用户授权；不绕过验证码、付费墙或访问控制。
 3. 记录来源 URL、采集时间、失败项和数据质量，不把推断写成页面事实。
-4. 当前 Preset 没有兼容能力时，说明缺失能力和可行的手工步骤，不另起运行时。`,
+4. 当前 Preset 没有兼容能力且 searchmin 也没有可用来源时，说明缺的是哪一个来源，不另起运行时。`,
   "story-long-scan": `# story-long-scan — DSH 原生长篇扫榜
 
 基于可核验样本识别长篇网文趋势。不提取登录凭据，也不绕过验证码、访问控制或站点限制。
@@ -188,7 +197,7 @@ Agent 过程通过右侧动态栏或官方 Chat 查看。禁止启动独立 Dash
 1. 明确平台、频道和题材方向；只有答案会改变采样范围时才问一个问题。
 2. 数据来源依次为：bridge/rankmin_cli.py 写出的榜单、用户提供的数据、
    references/genre-trends.md 中的历史趋势。
-   某一榜失败时，不要打开网页榜、library 页或作品页去补。
+   某一榜失败时，不要打开网页榜、library 页或作品页去补，也不要跑 searchmin_cli.py 去补。
    无法获取实时数据时必须明确标为历史假设。
 3. 起点默认在本技能目录执行
    python3 bridge/rankmin_cli.py --out {工作区}/扫榜/{YYYYMMDD} --limit 20 --qidian yuepiao,hotsales,readindex。
@@ -203,7 +212,7 @@ Agent 过程通过右侧动态栏或官方 Chat 查看。禁止启动独立 Dash
    作者没提供榜单时，结论不含七猫。刺猬猫没有账号环境变量时由 ciweimao_app 自己注册游客，
    会话写在运行用户的 ~/.dsh/ciweimao-guest.json。出口用 CIWEIMAO_PROXY_URL，或 ~/.dsh/ciweimao/ 里的快代理密钥。不要读 tokens.json，不要把会话或代理地址写进报告。
 5. 每次扫榜新建 扫榜/{YYYYMMDD}/（同日再扫加 -2）。stdout 打出的路径就是这次拿到的榜，先读这些文件。
-   任一榜失败则退出码 2，stderr 会点名失败的榜。不要编造名次，不要打开网页榜、library 页或作品页去补。
+   任一榜失败则退出码 2，stderr 会点名失败的榜。不要编造名次，不要打开网页榜、library 页或作品页去补，也不要跑 searchmin_cli.py 去补。
    不要把 sanjiang、collect、女生精选或女生月票写进命令。起点女生精选榜和女生月票榜
    当前没有公开列表，报 unavailable 时结论不含这两条。番茄 hot 是分类热门，
    newbook 是分类最新。缺掉的书名或刺猬猫字段名照命令原文写。
@@ -219,15 +228,18 @@ Agent 过程通过右侧动态栏或官方 Chat 查看。禁止启动独立 Dash
    从这份文件接上，所以结论要落盘，不只留在对话里。
 
 有榜失败且用户也未提供样本时，已写出的榜单照常读取；没拿到的榜使用内置参考完成方法论分析，
-并列出仍需核验的榜单。不要打开网页榜、library 页或作品页去补，也不要启动 CDP、独立浏览器或并行运行时。`,
+并列出仍需核验的榜单。不要打开网页榜、library 页或作品页去补，也不要跑 searchmin_cli.py 去补，也不要启动 CDP、独立浏览器或并行运行时。`,
   "story-short-scan": `# story-short-scan — DSH 原生短篇扫榜
 
 基于可核验样本识别短篇市场的情绪、题材与传播信号，不运行打包脚本、不读取 Cookie
 或 token，也不绕过验证码、登录或访问控制。长篇起点、番茄、刺猬猫和晋江不在这里采集，走 story-long-scan 的 bridge/rankmin_cli.py。
 
 1. 明确平台与方向；只有答案会改变采样范围时才问一个问题。
-2. 数据来源依次为：用户提供的数据或链接、当前 DSH Preset 可见的网页工具、
-   references/real-market-data.md 中的历史资料。无法联网时必须把结论标为候选假设。
+2. 数据来源依次为：用户提供的数据或链接、story 技能目录的 bridge/searchmin_cli.py（--mode deep）、
+   当前 DSH Preset 可见的网页工具、
+   references/real-market-data.md 中的历史资料。
+   searchmin 没有密钥或没有带来源链接的结果时，再用网页工具。无法联网时必须把结论标为候选假设。
+   长篇榜单不要用 searchmin 补。
 3. 记录来源 URL、采集日期、榜单口径、有效样本数、缺失字段和异常项。
 4. 分析情绪类型、题材热点、篇幅、开头、结尾、标题、人设与传播触发点；
    给每个趋势标注证据强度、饱和风险和有效期。
