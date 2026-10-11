@@ -40,9 +40,6 @@ def _qidian_block(item: RankItem) -> list[str]:
         lines.append(f"*{meta}*")
     lines.append(f"**字数：{_blank(item.word_count_text)}**")
     lines.append(f"**榜单值：{_blank(item.score_text)}**")
-    lines.append("**总推荐：[待补]**")
-    lines.append("**签约：[待补]**")
-    lines.append("**收费模式：[待补]**")
     if item.book_url:
         lines.append(f"[作品页]({item.book_url})")
     if item.description:

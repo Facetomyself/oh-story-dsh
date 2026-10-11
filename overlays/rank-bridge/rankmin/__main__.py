@@ -43,7 +43,7 @@ _QIDIAN_FIXTURE = """
 """
 _FANQIE_FIXTURE = """
 <script>window.__INITIAL_STATE__={"rank":{"rankTypeText":"阅读榜","book_list":[
-  {"bookId":"9001","bookName":"番茄书","author":"作者丙","abstract":"简介丙","read_count":"1.2万","wordNumber":"30万","category":"西方奇幻","creationStatus":"1"}
+  {"bookId":"9001","bookName":"番茄书","author":"作者丙","abstract":"【种田+慢热】简介丙","read_count":"1.2万","wordNumber":"30万","category":"西方奇幻","creationStatus":"1"}
 ]}};</script>
 """
 _FANQIE_POLLUTED = """
@@ -108,6 +108,9 @@ def self_test() -> int:
     if "测试书甲" not in text or "100万月票" not in text or "榜单值：[待补]" not in text:
         print("qidian markdown missing fields", file=sys.stderr)
         return 2
+    if "总推荐" in text or "签约" in text or "收费模式" in text:
+        print("qidian markdown invented closed fields", file=sys.stderr)
+        return 2
     checks += 1
     if resolve_qidian_category("hotsales") != "mobile-hotsales":
         print("qidian alias failed", file=sys.stderr)
@@ -142,8 +145,10 @@ def self_test() -> int:
     if polluted_fields(fanqie_snapshot):
         print("clean fanqie fixture looked polluted", file=sys.stderr)
         return 2
-    if "在读：1.2万" not in render_markdown(fanqie_snapshot):
-        print("fanqie markdown missing read count", file=sys.stderr)
+    fanqie_text = render_markdown(fanqie_snapshot)
+    tag_line = next((line for line in fanqie_text.splitlines() if line.startswith("**标签：**")), "")
+    if "在读：1.2万" not in fanqie_text or tag_line != "**标签：** 种田、慢热":
+        print("fanqie markdown missing read count or selling tags", file=sys.stderr)
         return 2
     checks += 1
     polluted = normalize_fanqie(fanqie, parse_fanqie_initial_state(_FANQIE_POLLUTED, limit=5))

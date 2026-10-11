@@ -285,6 +285,36 @@ const replacements: readonly Replacement[] = [
     from: ["解码失败的书名显示 `（标题待解析）`，bookId 与链接保留供回查。"]
   },
   {
+    path: "skills/story-long-scan/references/platform-qidian.md",
+    to: "默认组合：月票榜、畅销榜、阅读指数榜，别名 yuepiao,hotsales,readindex。作者点名新书榜时再加 newsign、signnewbook、pubnewbook、newauthor。文件名 `起点{榜单}_{YYYYMMDD}.md`。",
+    from: ["默认组合：新人签约新书榜 + 签约作者新书榜 + 月票榜 + 畅销榜。文件名 `起点{榜单}_{YYYYMMDD}.md`。"]
+  },
+  {
+    path: "skills/story-long-scan/references/platform-qidian.md",
+    to: "排名、书名、作者、题材（主类·子类）、状态、字数、榜单值、作品页。榜单值是这一榜自己的口径，不是在读人数，也不是总推荐。移动榜不写总推荐、签约和收费模式。简介只有列表里带了才写。缺题材、字数或榜单值就标 [待补]。不要进详情页补。",
+    from: ["排名、书名、作者、题材（主类·子类；聚合时主类作题材、子类进标签）、状态、签约、收费模式、字数、总推荐（聚合的热度口径）、标签/最新更新/简介（详情页）、作品页链接。额外必填：题材、字数、总推荐，缺的写 `[待补]`。"]
+  },
+  {
+    path: "skills/story-long-scan/references/platform-qidian.md",
+    to: "| 三江推荐 | 本版本不采集，不要写成平台力推 |",
+    from: ["| 三江推荐 | 平台力推方向 |"]
+  },
+  {
+    path: "skills/story-long-scan/references/platform-fanqie.md",
+    to: "别名编码是 频道_类型_题材。频道 0=女频、1=男频；类型 1=分类最新、2=分类热门、3=题材新书。不要打开网页榜补失败的榜。",
+    from: ["URL `fanqienovel.com/rank/{channel}_{type}_{cat_id}`：channel 0=女频/1=男频，type 1=新书榜/2=阅读榜。"]
+  },
+  {
+    path: "skills/story-long-scan/references/platform-fanqie.md",
+    to: "网页书库的连载、30 万字以下，对应题材别名 rising。不要请求 library 页，也不要按筛选段拼 URL。",
+    from: ["URL `fanqienovel.com/library/{筛选}/page_{n}?sort=hottes`：筛选段 `audience1`=男生、`audience0`=女生（不写＝不分男女），`stat1`=连载中、`stat0`=已完结，`count0`=30 万字以下（`count1`-`count4` 依次 30-50 万、50-100 万、100-200 万、200 万以上），全不选时是 `all`。每页 18 本，按热度排。"]
+  },
+  {
+    path: "skills/story-long-scan/references/platform-fanqie.md",
+    to: "排名、书名、作者、题材（列表里的 category / categoryV2，不进详情页）、状态、在读、字数、最新更新、bookId、作品页、简介。标签只取简介里成对的【】，用加号或顿号拆开；没有【】就不写标签，不要把分类名当成标签。详情页没有数字评分，不输出评分。",
+    from: ["排名、书名、作者、题材（详情页 categoryV2）、状态、在读（核心指标，聚合的热度口径）、字数、标签（简介开头 `【种田+慢热+西幻】`，题材细分的真实信号）、最新更新、bookId、作品页链接、简介。详情页没有数字评分，不输出评分。"]
+  },
+  {
     path: "skills/story-short-scan/SKILL.md",
     to: "**核心信念：短篇市场变化快，题材信号有效期短。** 扫榜报告必须标注样本日期、趋势可信度和下次重新扫榜的时间。长篇起点、番茄、刺猬猫和晋江不在这里采集，走 story-long-scan 的 `bridge/rankmin_cli.py`。",
     from: [

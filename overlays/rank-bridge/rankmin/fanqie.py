@@ -286,6 +286,21 @@ def _timestamp(value: object) -> str:
         return str(value)
 
 
+_BRACKET_TAGS = re.compile(r"【([^【】]+)】")
+_TAG_SPLIT = re.compile(r"[+＋、，,/|｜]+")
+
+
+def _selling_tags(description: str) -> list[str]:
+    found: list[str] = []
+    for inner in _BRACKET_TAGS.findall(description):
+        for part in _TAG_SPLIT.split(inner):
+            tag = part.strip()
+            if not tag or has_private_use_chars(tag) or tag in found:
+                continue
+            found.append(tag)
+    return found
+
+
 def normalize_fanqie(source: SourceSpec, parse_result: ParseResult) -> RankSnapshot:
     items: list[RankItem] = []
     for index, raw in enumerate(parse_result.items, start=1):
@@ -310,7 +325,7 @@ def normalize_fanqie(source: SourceSpec, parse_result: ParseResult) -> RankSnaps
             score_text=f"在读：{read_count}" if read_count else "",
             word_count_text=word_number,
             status=_creation_status(raw.get("creationStatus", raw.get("creation_status"))),
-            tags=[part for part in (category, category_v2) if part],
+            tags=_selling_tags(description),
             latest_chapter=_plain(raw.get("lastChapterTitle") or raw.get("last_chapter_title")),
             latest_update_time=_timestamp(raw.get("lastChapterUpdateTime")),
             extra={"read_count": read_count},

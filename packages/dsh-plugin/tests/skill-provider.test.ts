@@ -121,6 +121,9 @@ describe("Oh Story bundled skill provider", () => {
     expect(step3).toContain("male-rising-");
     expect(step3).toContain("female-rising-");
     expect(longBody).toContain("不要把 sanjiang、collect、女生精选或女生月票写进命令");
+    expect(longBody).toContain("起点热度看榜单值，不是在读人数，也不是总推荐");
+    expect(longBody).toContain("番茄标签只取简介里的【】");
+    expect(longBody).toContain("三江推荐本版本不采集");
     expect(longScan?.content).toContain("本版本没有 provider");
     expect(longScan?.content).not.toContain("刺猬猫本版本没有");
     expect(longScan?.content).not.toContain("晋江本版本没有");

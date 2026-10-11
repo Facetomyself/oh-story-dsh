@@ -56,7 +56,7 @@ metadata: {"openclaw":{"source":"https://github.com/zenstory-ai/oh-story-claudec
 1. 平台参考只读分析维度和字段：[起点](references/platform-qidian.md) / [番茄](references/platform-fanqie.md)。不要执行参考里的旧命令，不要启动 CDP。
 2. 每次扫榜新建输出目录 `扫榜/{YYYYMMDD}/`（同日再扫加 `-2`）。在本技能目录执行：`python3 bridge/rankmin_cli.py --out {输出目录} --limit 20 --qidian yuepiao,hotsales,readindex`。番茄再加 `--fanqie male-hot-xifangqihuan,male-newbook-xifangqihuan,female-hot-gufengshiqing,female-newbook-gufengshiqing`。要看正在起量的新书，把 `male-rising-<题材>`、`female-rising-<题材>` 加在同一条 `--fanqie` 后面，不要写进默认的四个分类。这是该题材连载且 30 万字以下按热度，不是网页书库。作者点名的榜或题材换成对应别名，不要一次扫完全部题材。不要把 sanjiang、collect、女生精选或女生月票写进命令。
 3. 成功时写出 `起点{榜}_{日期}.md` 和 `番茄{榜}_{日期}.md`。主会话读这些文件。本包没有聚合脚本，不要运行 `scripts/` 下的采集或聚合命令。
-4. stdout 打出的路径就是这次拿到的榜，先读这些文件。任一榜失败则退出码 2，stderr 会点名失败的榜。不要编造名次，不要改走 CDP，也不要打开网页榜、library 页或作品页去补。起点女生精选榜和女生月票榜当前没有公开列表，报 unavailable 时结论不含这两条。番茄 `hot` 是分类热门，`newbook` 是分类最新，`rising` 是题材新书。不要抓 library 页。
+4. stdout 打出的路径就是这次拿到的榜，先读这些文件。任一榜失败则退出码 2，stderr 会点名失败的榜。不要编造名次，不要改走 CDP，也不要打开网页榜、library 页或作品页去补。起点女生精选榜和女生月票榜当前没有公开列表，报 unavailable 时结论不含这两条。起点热度看榜单值，不是总推荐；文件不写总推荐、签约和收费模式。番茄 `hot` 是分类热门，`newbook` 是分类最新，`rising` 是题材新书。番茄标签只取简介里的【】，没有就不写。三江推荐本版本不采集。不要抓 library 页。
 5. 同方向不到 15 本标「少」，等同 `[数据稀疏]`。要看某一条的简介，直接打开对应 markdown，一次一个方向。
 
 #### 刺猬猫
