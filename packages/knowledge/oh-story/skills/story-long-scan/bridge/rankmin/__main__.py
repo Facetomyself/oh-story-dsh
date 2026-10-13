@@ -6,7 +6,6 @@ import sys
 from pathlib import Path
 
 from .ciweimao import (
-    DEFAULT_CATEGORIES as CIWEIMAO_DEFAULTS,
     normalize_ciweimao,
     parse_ciweimao_rank,
     resolve_ciweimao_category,
@@ -14,7 +13,6 @@ from .ciweimao import (
 from .ciweimao import ciweimao_source
 from .contracts import RankFetchError
 from .fanqie import (
-    DEFAULT_CATEGORIES as FANQIE_DEFAULTS,
     fetch_fanqie_rank,
     normalize_fanqie,
     parse_fanqie_initial_state,
@@ -23,7 +21,6 @@ from .fanqie import (
 )
 from .markdown_out import render_markdown, write_snapshot
 from .qidian import (
-    DEFAULT_CATEGORIES as QIDIAN_DEFAULTS,
     fetch_qidian_mobile,
     normalize_qidian_mobile,
     parse_qidian_mobile_rank_ssr,
@@ -68,18 +65,21 @@ def _run_fetch(
     jjwxc: str,
     limit: int,
 ) -> int:
-    from .ciweimao import fetch_ciweimao_rank
-    from .jjwxc import fetch_jjwxc_rank
+    from .providers import provider_map
 
+    selected = {
+        "qidian": qidian,
+        "fanqie": fanqie,
+        "ciweimao": ciweimao,
+        "jjwxc": jjwxc,
+    }
+    table = provider_map()
     jobs: list[tuple[str, str, object]] = []
-    if qidian:
-        jobs.extend(("qidian", category, fetch_qidian_mobile) for category in _split(qidian, ()))
-    if fanqie:
-        jobs.extend(("fanqie", category, fetch_fanqie_rank) for category in _split(fanqie, ()))
-    if ciweimao:
-        jobs.extend(("ciweimao", category, fetch_ciweimao_rank) for category in _split(ciweimao, ()))
-    if jjwxc:
-        jobs.extend(("jjwxc", category, fetch_jjwxc_rank) for category in _split(jjwxc, ()))
+    for site_id, raw in selected.items():
+        if not raw:
+            continue
+        fetch = table[site_id].fetch
+        jobs.extend((site_id, category, fetch) for category in _split(raw, ()))
     if not jobs:
         print("name --qidian, --fanqie, --ciweimao, or --jjwxc", file=sys.stderr)
         return 2
@@ -270,8 +270,44 @@ def self_test() -> int:
     if _fanqie_rising_self_test() == 0:
         return 2
     checks += 1
+    if _provider_self_test() == 0:
+        return 2
+    checks += 1
     print(f"rankmin self-test ok ({checks})")
     return 0
+
+
+def _provider_self_test() -> int:
+    from .fanqie import DEFAULT_CATEGORIES as fanqie_defaults
+    from .providers import provider_map
+
+    table = provider_map()
+    if tuple(table) != ("qidian", "fanqie", "ciweimao", "jjwxc"):
+        print("rank providers drifted", file=sys.stderr)
+        return 0
+    if table["qidian"].transport != "urllib" or table["jjwxc"].transport != "urllib":
+        print("stdlib rank transport drifted", file=sys.stderr)
+        return 0
+    if table["fanqie"].transport != "curl_cffi" or table["ciweimao"].transport != "curl_cffi":
+        print("curl rank transport drifted", file=sys.stderr)
+        return 0
+    if table["fanqie"].defaults != fanqie_defaults or "rising" in ",".join(fanqie_defaults):
+        print("fanqie default categories drifted", file=sys.stderr)
+        return 0
+    root = Path(__file__).resolve().parents[1]
+    offenders: list[str] = []
+    for path in root.rglob("*.py"):
+        if path.name == "net.py" or "__pycache__" in path.parts:
+            continue
+        for line in path.read_text(encoding="utf-8").splitlines():
+            stripped = line.strip()
+            if stripped.startswith("from curl_cffi") or stripped.startswith("import curl_cffi"):
+                offenders.append(str(path.relative_to(root)))
+                break
+    if offenders:
+        print("curl_cffi import left in " + ", ".join(offenders), file=sys.stderr)
+        return 0
+    return 1
 
 
 def _snapshot_for(category: str) -> object:
@@ -294,12 +330,13 @@ def _snapshot_for(category: str) -> object:
 
 def _partial_board_self_test() -> int:
     """One failed board must not hide a sibling that already wrote."""
-    global fetch_qidian_mobile
     import io
     import tempfile
     from contextlib import redirect_stderr, redirect_stdout
 
-    original = fetch_qidian_mobile
+    from . import qidian as qidian_provider
+
+    original = qidian_provider.fetch_qidian_mobile
 
     def patched(category: str, limit: int = 20):
         del limit
@@ -310,7 +347,7 @@ def _partial_board_self_test() -> int:
         return _snapshot_for(category)
 
     try:
-        fetch_qidian_mobile = patched
+        qidian_provider.fetch_qidian_mobile = patched
         with tempfile.TemporaryDirectory() as tmp:
             out = io.StringIO()
             err = io.StringIO()
@@ -344,7 +381,7 @@ def _partial_board_self_test() -> int:
                 print("board value error dropped the sibling", file=sys.stderr)
                 return 0
     finally:
-        fetch_qidian_mobile = original
+        qidian_provider.fetch_qidian_mobile = original
     return 1
 
 
@@ -818,16 +855,17 @@ def main(argv: list[str] | None = None) -> int:
     if not args.qidian and not args.fanqie and not args.ciweimao and not args.jjwxc:
         print("pass --qidian, --fanqie, --ciweimao, or --jjwxc", file=sys.stderr)
         return 2
-    if args.qidian == "default":
-        args.qidian = ",".join(QIDIAN_DEFAULTS)
-    if args.fanqie == "default":
-        args.fanqie = ",".join(FANQIE_DEFAULTS)
-    if args.ciweimao == "default":
-        args.ciweimao = ",".join(CIWEIMAO_DEFAULTS)
-    if args.jjwxc == "default":
-        from .jjwxc import DEFAULT_CATEGORIES as JJWXC_DEFAULTS
+    from .providers import provider_map
 
-        args.jjwxc = ",".join(JJWXC_DEFAULTS)
+    table = provider_map()
+    if args.qidian == "default":
+        args.qidian = ",".join(table["qidian"].defaults)
+    if args.fanqie == "default":
+        args.fanqie = ",".join(table["fanqie"].defaults)
+    if args.ciweimao == "default":
+        args.ciweimao = ",".join(table["ciweimao"].defaults)
+    if args.jjwxc == "default":
+        args.jjwxc = ",".join(table["jjwxc"].defaults)
     return _run_fetch(
         Path(args.out),
         day,

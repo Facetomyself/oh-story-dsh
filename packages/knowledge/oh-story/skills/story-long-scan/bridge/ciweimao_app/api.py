@@ -7,18 +7,22 @@
 import asyncio
 import inspect
 import json
+import sys
 import threading
 import time
-
-from curl_cffi.requests import AsyncSession as CurlAsyncSession
-from curl_cffi.requests import Session as CurlSession
-from curl_cffi.requests.exceptions import (
-    ConnectionError as CurlConnectionError,
-)
-from curl_cffi.requests.exceptions import Timeout as CurlTimeout
+from pathlib import Path
 
 from . import config, content, crypto, protocol
 from .web import AsyncWebChapterSession, WebChapterSession
+
+
+def _rank_net():
+    bridge = str(Path(__file__).resolve().parents[1])
+    if bridge not in sys.path:
+        sys.path.insert(0, bridge)
+    import net
+
+    return net
 
 
 class ApiError(RuntimeError):
@@ -213,7 +217,7 @@ class Session(_ProtocolMixin):
         self._web_session_factory = web_session_factory
         self._web_session = None
         self._web_session_init_lock = threading.Lock()
-        self._session = CurlSession(
+        self._session = _rank_net().sync_session(
             headers=self.headers,
             impersonate=impersonate,
             proxy=proxy,
@@ -276,7 +280,7 @@ class Session(_ProtocolMixin):
         for attempt in range(self.request_attempts):
             try:
                 return getattr(self._session, method)(url, **kwargs)
-            except (CurlConnectionError, CurlTimeout):
+            except _rank_net().transport_errors():
                 if attempt + 1 >= self.request_attempts:
                     raise
                 if self.retry_backoff > 0:
@@ -532,7 +536,7 @@ class AsyncSession(_ProtocolMixin):
         self._web_session_factory = web_session_factory
         self._web_session = None
         self._web_session_init_lock = threading.Lock()
-        self._session = CurlAsyncSession(
+        self._session = _rank_net().async_session(
             headers=self.headers,
             impersonate=impersonate,
             max_clients=max(1, int(max_clients)),
@@ -610,7 +614,7 @@ class AsyncSession(_ProtocolMixin):
         for attempt in range(self.request_attempts):
             try:
                 return await getattr(self._session, method)(url, **kwargs)
-            except (CurlConnectionError, CurlTimeout):
+            except _rank_net().transport_errors():
                 if attempt + 1 >= self.request_attempts:
                     raise
                 if self.retry_backoff > 0:

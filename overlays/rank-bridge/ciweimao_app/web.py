@@ -18,8 +18,10 @@ import base64
 import binascii
 import inspect
 import re
+import sys
 import threading
 import time
+from pathlib import Path
 from collections.abc import Callable, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass, field
 from html.parser import HTMLParser
@@ -30,8 +32,6 @@ from urllib.parse import quote, urlsplit
 
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
-from curl_cffi.requests import AsyncSession as CurlAsyncSession
-from curl_cffi.requests import Session as CurlSession
 
 WEB_BASE_URL = "https://www.ciweimao.com"
 WEB_USER_AGENT = (
@@ -448,6 +448,15 @@ def _response_json(response: Any) -> Mapping[str, Any]:
     return value
 
 
+def _rank_net():
+    bridge = str(Path(__file__).resolve().parents[1])
+    if bridge not in sys.path:
+        sys.path.insert(0, bridge)
+    import net
+
+    return net
+
+
 def _call_supported(method: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
     """给真实 curl client 和极简 mock 都传递兼容的参数。"""
     try:
@@ -738,7 +747,7 @@ class WebChapterSession(_WebSessionBase):
         cid = str(chapter_id).strip()
         chapter_url = self.chapter_url(cid)
         with self._lock:
-            self._new_client(CurlSession)
+            self._new_client(_rank_net().sync_session)
             page_response = self._request(
                 "get", chapter_url,
                 headers=self._headers(ajax=False, chapter_url=chapter_url),
@@ -874,7 +883,7 @@ class AsyncWebChapterSession(_WebSessionBase):
         if self._lock is None:
             self._lock = asyncio.Lock()
         async with self._lock:
-            self._new_client(CurlAsyncSession)
+            self._new_client(_rank_net().async_session)
             page_response = await self._request(
                 "get", chapter_url,
                 headers=self._headers(ajax=False, chapter_url=chapter_url),

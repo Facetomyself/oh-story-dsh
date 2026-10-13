@@ -6,15 +6,20 @@ import asyncio
 from dataclasses import dataclass
 import hashlib
 import json
+import sys
+from pathlib import Path
 from uuid import uuid4
 
-from curl_cffi.requests import AsyncSession as CurlAsyncSession
-from curl_cffi.requests.exceptions import (
-    ConnectionError as CurlConnectionError,
-)
-from curl_cffi.requests.exceptions import Timeout as CurlTimeout
-
 from . import config, crypto, protocol
+
+
+def _rank_net():
+    bridge = str(Path(__file__).resolve().parents[1])
+    if bridge not in sys.path:
+        sys.path.insert(0, bridge)
+    import net
+
+    return net
 
 
 class GuestRegistrationError(RuntimeError):
@@ -89,7 +94,7 @@ async def register_guest(
     retry_backoff: float = 0.25,
     uuid_value: str | None = None,
     rand_str: str | None = None,
-    session_factory=CurlAsyncSession,
+    session_factory=None,
 ) -> GuestCredentials:
     """经指定出口创建未绑定游客身份，不在日志中输出凭据。"""
     headers = {
@@ -112,7 +117,8 @@ async def register_guest(
         rand_str=rand_str,
     )
     attempts = max(1, int(max_retries) + 1)
-    async with session_factory(**session_kwargs) as session:
+    factory = session_factory or _rank_net().async_session
+    async with factory(**session_kwargs) as session:
         response = None
         for attempt in range(attempts):
             try:
@@ -122,7 +128,7 @@ async def register_guest(
                     timeout=float(timeout),
                 )
                 break
-            except (CurlConnectionError, CurlTimeout):
+            except _rank_net().transport_errors():
                 if attempt + 1 >= attempts:
                     raise
                 delay = max(0, float(retry_backoff)) * (2 ** attempt)

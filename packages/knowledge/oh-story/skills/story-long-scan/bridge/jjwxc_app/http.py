@@ -8,14 +8,15 @@ Failures name the status only. They do not include the request target.
 from __future__ import annotations
 
 from collections.abc import Mapping
-import gzip
 import random
 import re
 import ssl
+import sys
 import time
 import uuid
 import urllib.error
 import urllib.request
+from pathlib import Path
 from dataclasses import dataclass
 from typing import Callable
 from urllib.parse import parse_qsl, urlparse
@@ -165,13 +166,17 @@ class RateLimiter:
         self._last_request_at = self._clock()
 
 
+def _rank_net():
+    bridge = str(Path(__file__).resolve().parents[1])
+    if bridge not in sys.path:
+        sys.path.insert(0, bridge)
+    import net
+
+    return net
+
+
 def _decompress(body: bytes, content_encoding: str = "") -> bytes:
-    if "gzip" in content_encoding.lower() or body.startswith(b"\x1f\x8b"):
-        try:
-            return gzip.decompress(body)
-        except OSError:
-            return body
-    return body
+    return _rank_net().gunzip(body, content_encoding)
 
 
 def _decode(body: bytes, content_encoding: str = "") -> str:

@@ -11,6 +11,12 @@
 
 ## [Unreleased]
 
+## [0.1.26] - 2026-10-13
+
+### Changed
+
+- 起点、番茄、刺猬猫、晋江的扫榜各走一个 `RankProvider`。番茄和刺猬猫共用 `net.py` 里的 curl_cffi 会话，依赖版本只写在 `overlays/rank-bridge/requirements.txt`。起点和晋江仍用标准库 HTTP。榜单字段、番茄默认四个分类、rising 过滤、晋江作品页指标和失败时不补榜都不变。
+
 ## [0.1.25] - 2026-10-11
 
 ### Added

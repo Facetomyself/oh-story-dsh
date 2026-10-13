@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-import gzip
 import re
 import ssl
+import sys
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
+from pathlib import Path
 
 _META_CHARSET_RE = re.compile(br"<meta[^>]+charset\s*=\s*['\"]?([A-Za-z0-9_\-]+)", re.I)
 
@@ -17,14 +18,17 @@ def _normalize_encoding(encoding: str) -> str:
     return normalized or "utf-8"
 
 
+def _rank_net():
+    bridge = str(Path(__file__).resolve().parents[1])
+    if bridge not in sys.path:
+        sys.path.insert(0, bridge)
+    import net
+
+    return net
+
+
 def _maybe_decompress_body(body: bytes, content_encoding: str = "") -> bytes:
-    encoding = (content_encoding or "").lower()
-    if "gzip" in encoding or body.startswith(b"\x1f\x8b"):
-        try:
-            return gzip.decompress(body)
-        except OSError:
-            return body
-    return body
+    return _rank_net().gunzip(body, content_encoding)
 
 
 def _detect_meta_encoding(body: bytes) -> str:

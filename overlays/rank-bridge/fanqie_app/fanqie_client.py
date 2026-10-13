@@ -10,16 +10,13 @@ import os
 import re
 import secrets
 import time
+import sys
 import urllib.parse
 import uuid
 import zlib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Iterable
-
-from curl_cffi import CurlOpt
-from curl_cffi.requests import Session
-from curl_cffi.requests.exceptions import RequestException
 
 from fanqie_pure import (
     APPLOG_KEY_MATERIAL,
@@ -487,15 +484,25 @@ def _write_book(output_dir: Path, book: BookInfo, chapters: list[tuple[ChapterRe
     return destination
 
 
+def _rank_net():
+    bridge = str(Path(__file__).resolve().parents[1])
+    if bridge not in sys.path:
+        sys.path.insert(0, bridge)
+    import net
+
+    return net
+
+
 class FanqieClient:
     def __init__(self, timeout: int = 20) -> None:
         self.timeout = timeout
-        self._http = Session(
+        library = _rank_net()
+        self._http = library.sync_session(
             impersonate=IMPERSONATE,
             default_headers=False,
             allow_redirects=False,
             timeout=timeout,
-            curl_options={CurlOpt.PATH_AS_IS: 1},
+            curl_options={library.path_as_is(): 1},
         )
         self.device_id, self.install_id = self._register_device()
 
@@ -511,7 +518,7 @@ class FanqieClient:
                 quote=False,
                 accept_encoding="gzip, deflate",
             )
-        except RequestException as error:
+        except _rank_net().request_error() as error:
             raise RuntimeError(f"transport error: {error}") from error
         content_type = ""
         header_type = response.headers.get("Content-Type")

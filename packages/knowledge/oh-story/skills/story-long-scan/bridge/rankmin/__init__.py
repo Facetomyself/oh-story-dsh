@@ -1,4 +1,4 @@
-"""Minimal Qidian-mobile, Fanqie, Ciweimao-app, and JJWXC-app rank providers."""
+"""Qidian, Fanqie, Ciweimao, and JJWXC rank providers. Dispatch is rankmin.providers."""
 
 from .ciweimao import fetch_ciweimao_rank
 from .fanqie import fetch_fanqie_rank

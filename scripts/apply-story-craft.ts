@@ -386,6 +386,8 @@ async function copyRankBridge(): Promise<void> {
   await mkdir(dirname(cliTarget), { recursive: true });
   await cp(join(rankBridgeRoot, "rankmin"), packageTarget, { recursive: true });
   await copyFile(join(rankBridgeRoot, "rankmin_cli.py"), cliTarget);
+  await copyFile(join(rankBridgeRoot, "net.py"), join(dirname(cliTarget), "net.py"));
+  await copyFile(join(rankBridgeRoot, "requirements.txt"), join(dirname(cliTarget), "requirements.txt"));
   const clientTarget = join(ohStoryRoot, "skills/story-long-scan/bridge/ciweimao_app");
   await rm(clientTarget, { recursive: true, force: true });
   await cp(join(rankBridgeRoot, "ciweimao_app"), clientTarget, { recursive: true });

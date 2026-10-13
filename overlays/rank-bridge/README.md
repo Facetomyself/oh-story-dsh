@@ -4,4 +4,4 @@
 
 `assets:craft` 把 `rankmin/`、`ciweimao_app/`、`fanqie_app/` 和 `jjwxc_app/` 铺到 `skills/story-long-scan/bridge/`，并把 `rankmin_cli.py` 铺到同级 `bridge/`。发行构建会删掉 `skills/story-long-scan/scripts/`，所以采集代码不能放在 `scripts/` 下。
 
-不包含：原始 HTML 落盘、桌面 WOFF、番茄字体表、番茄网页书库、用详情页补书名、开篇样本、验证码打戳、章节下载、七猫。起点女频验证页不接。晋江作品页只取收藏、营养液、积分和字数。书名缺失或仍是私用区字符时，函数失败并指出字段。不下章节。刺猬猫运行需要 `curl_cffi`、`pycryptodome` 和 `kdl`。晋江榜只依赖 Python 标准库。
+不包含：原始 HTML 落盘、桌面 WOFF、番茄字体表、番茄网页书库、用详情页补书名、开篇样本、验证码打戳、章节下载、七猫。起点女频验证页不接。晋江作品页只取收藏、营养液、积分和字数。书名缺失或仍是私用区字符时，函数失败并指出字段。不下章节。四个平台各自是一个 `RankProvider`，命令行只查这张表。番茄和刺猬猫的 curl 会话都从 `net.py` 打开，依赖钉在 `requirements.txt`：`curl_cffi`、`pycryptodome`、`kdl`。起点和晋江继续用 Python 标准库，解压共用 `net.gunzip`。晋江的重试、限速和作品页校验仍留在 `jjwxc_app/http.py`。
